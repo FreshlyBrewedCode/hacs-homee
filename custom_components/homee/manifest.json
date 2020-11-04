@@ -1,0 +1,16 @@
+{
+  "domain": "homee",
+  "name": "homee",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/homee",
+  "requirements": [
+    "websocket_client==0.57.0",
+    "pymee==1.1.0",
+    "websockets==8.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [{ "type": "_sftp-ssh._tcp.local.", "name": "homee*" }],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@FreshlyBrewedCode"]
+}

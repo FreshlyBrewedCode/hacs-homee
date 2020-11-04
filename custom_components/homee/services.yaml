@@ -1,0 +1,12 @@
+set_value:
+  description: Set an attribute value of a homee node
+  fields:
+    node:
+      description: The node id
+      example: 36
+    attribute:
+      description: The attribute id
+      example: 90
+    value:
+      description: The value
+      example: 1
