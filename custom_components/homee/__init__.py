@@ -122,12 +122,16 @@ class HomeeNodeHelper:
 
     async def async_set_value(self, attribute_type: int, value: float):
         """Set an attribute value on the homee node."""
+        await self.async_set_value_by_id(self.get_attribute(attribute_type).id, value)
+
+    async def async_set_value_by_id(self, attribute_id: int, value: float):
+        """Set an attribute value on the homee node."""
         await self._entity.hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
             {
                 ATTR_NODE: self._node.id,
-                ATTR_ATTRIBUTE: self.get_attribute(attribute_type).id,
+                ATTR_ATTRIBUTE: attribute_id,
                 ATTR_VALUE: value,
             },
         )
