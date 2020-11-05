@@ -2,7 +2,8 @@
   "domain": "homee",
   "name": "homee",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/homee",
+  "documentation": "https://github.com/FreshlyBrewedCode/hacs-homee",
+  "issue_tracker": "https://github.com/FreshlyBrewedCode/hacs-homee/issues",
   "requirements": [
     "websocket_client==0.57.0",
     "pymee==1.1.0",
