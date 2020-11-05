@@ -4,7 +4,8 @@
     "domains": [
         "binary_sensor",
         "light",
-        "climate"
+        "climate",
+        "switch"
     ],
     "iot_class": "Local Push",
     "homeassistant": "0.117.1"

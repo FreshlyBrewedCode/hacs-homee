@@ -14,7 +14,7 @@ from .const import ATTR_ATTRIBUTE, ATTR_NODE, ATTR_VALUE, DOMAIN, SERVICE_SET_VA
 # TODO
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["light", "climate", "binary_sensor"]
+PLATFORMS = ["light", "climate", "binary_sensor", "switch"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
