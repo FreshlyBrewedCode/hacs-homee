@@ -34,6 +34,7 @@ jobs:
         - run: python3 -m pip install black
         - run: black .
   release:
+    needs: [validate, style]
     name: Release
     runs-on: ubuntu-18.04
     steps:
