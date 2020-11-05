@@ -19,18 +19,28 @@ Platform | Description
 `binary_sensor` | Integrate homee devices that binary state information like `on`/`off` or `open`/`close`.
 `climate` | Integrate homee devices that provide temperature and can set a target temperature.
 `light` | Integrate lights from homee.
-`switch` | Integrate homee devices that can be switched `on`/`off` with optional power monitoring.
 
 ![homee][homee_logo]
 
 ## Installation
+
+### HACS (recommended)
+
+1. Make sure the [HACS integration](https://hacs.xyz/) is properly installed for your instance of home assistant.
+2. In the HACS UI go to "Integrations", click on three small dots in the top right and select "Custom repositories".
+3. Paste `https://github.com/FreshlyBrewedCode/hacs-homee` into the field that says "Add custom repository URL", select "Integration" from "Category" dropdown and click "Add".
+4. You should now see a card with the homee integration in the HACS -> "Integrations" section. Click "Install".
+5. Select the latest version from the dropdown and click "Install".
+6. Restart Home Assistant.
+
+### Manual installation
 
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
 3. In the `custom_components` directory (folder) create a new folder called `homee`.
 4. Download _all_ the files from the `custom_components/homee/` directory (folder) in this repository.
 5. Place the files you downloaded in the new directory (folder) you created.
-6. Restart Home Assistant
+6. Restart Home Assistant.
 
 ## Configuration
 
@@ -48,6 +58,8 @@ TODO: Customize device classes
 ## Contributions are welcome!
 
 If you want to contribute to this please read the [Contribution guidelines](CONTRIBUTING.md)
+
+Home Assistant encourages developers of integrations to use a separate python package that handles the communication between Home Assistant and the different devices (i.e. python api/backend). This integration uses [pymee](https://github.com/FreshlyBrewedCode/pymee) to connect and communicate with the homee websocket api. For some features it may be necessary to make changes to pymee first.
 
 ***
 

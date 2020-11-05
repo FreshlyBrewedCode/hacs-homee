@@ -17,22 +17,8 @@ Platform | Description
 `binary_sensor` | Integrate homee devices that binary state information like `on`/`off` or `open`/`close`.
 `climate` | Integrate homee devices that provide temperature and can set a target temperature.
 `light` | Integrate lights from homee.
-`switch` | Integrate homee devices that can be switched `on`/`off` with optional power monitoring.
 
 ![homee][homee_logo]
-
-{% if not installed %}
-
-## Installation
-
-1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
-2. If you do not have a `custom_components` directory (folder) there, you need to create it.
-3. In the `custom_components` directory (folder) create a new folder called `homee`.
-4. Download _all_ the files from the `custom_components/homee/` directory (folder) in this repository.
-5. Place the files you downloaded in the new directory (folder) you created.
-6. Restart Home Assistant
-
-{% endif %}
 
 ## Configuration
 
