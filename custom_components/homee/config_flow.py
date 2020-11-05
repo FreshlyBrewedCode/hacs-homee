@@ -2,16 +2,15 @@
 import asyncio
 import logging
 
+from homeassistant import config_entries, core, exceptions
+from homeassistant.components import zeroconf
+from homeassistant.components.zeroconf import ATTR_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from pymee import (
     AuthenticationFailedException as HomeeAuthenticationFailedException,
     Homee,
 )
 import voluptuous as vol
-
-from homeassistant import config_entries, core, exceptions
-from homeassistant.components import zeroconf
-from homeassistant.components.zeroconf import ATTR_HOST
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
 

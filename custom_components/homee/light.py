@@ -2,10 +2,6 @@
 
 import logging
 
-from pymee import Homee
-from pymee.const import AttributeType, NodeProfile
-from pymee.model import HomeeAttribute, HomeeNode
-
 import homeassistant
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -23,6 +19,9 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
 )
+from pymee import Homee
+from pymee.const import AttributeType, NodeProfile
+from pymee.model import HomeeAttribute, HomeeNode
 
 from . import HomeeNodeHelper
 from .const import DOMAIN, HOMEE_LIGHT_MAX_MIRED, HOMEE_LIGHT_MIN_MIRED
