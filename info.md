@@ -17,7 +17,7 @@ _Component to integrate with [homee][homee]._
 
 Platform | Description
 -- | --
-`binary_sensor` | Integrate homee devices that binary state information like `on`/`off` or `open`/`close`.
+`binary_sensor` | Integrate homee devices that provide binary state information like `on`/`off` or `open`/`close`.
 `climate` | Integrate homee devices that provide temperature and can set a target temperature.
 `light` | Integrate lights from homee.
 
@@ -38,7 +38,7 @@ TODO: Customize device classes
 
 
 [homee]: https://hom.ee
-[buymecoffee]: https://www.buymeacoffee.com/FreshlyBrewed
+[buymecoffee]: https://ko-fi.com/freshlybrewed
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
 [commits-shield]: https://img.shields.io/github/commit-activity/y/FreshlyBrewedCode/hacs-homee.svg?style=for-the-badge
 [commits]: https://github.com/FreshlyBrewedCode/hacs-homee/commits/master
