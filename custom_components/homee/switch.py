@@ -21,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 HOMEE_PLUG_PROFILES = [
     NodeProfile.ON_OFF_PLUG,
     NodeProfile.METERING_PLUG,
-    NodeProfile.DIMMABLE_PLUG,
     NodeProfile.DIMMABLE_METERING_PLUG,
     NodeProfile.DOUBLE_ON_OFF_PLUG,
     NodeProfile.IMPULSE_PLUG,
@@ -30,7 +29,6 @@ HOMEE_PLUG_PROFILES = [
 HOMEE_SWITCH_PROFILES = [
     NodeProfile.DIMMABLE_METERING_SWITCH,
     NodeProfile.METERING_SWITCH,
-    NodeProfile.DIMMABLE_SWITCH,
     NodeProfile.ON_OFF_SWITCH,
     NodeProfile.DOUBLE_ON_OFF_SWITCH,
     NodeProfile.ON_OFF_SWITCH_WITH_BINARY_INPUT,

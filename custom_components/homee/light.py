@@ -83,6 +83,8 @@ def is_light_node(node: HomeeNode):
             NodeProfile.DIMMABLE_LIGHT_WITH_BRIGHTNESS_AND_PRESENCE_SENSOR,
             NodeProfile.DIMMABLE_LIGHT_WITH_PRESENCE_SENSOR,
             NodeProfile.DIMMABLE_RGBWLIGHT,
+            NodeProfile.DIMMABLE_PLUG,
+            NodeProfile.DIMMABLE_SWITCH,
         ]
         and AttributeType.ON_OFF in node._attribute_map
     )
