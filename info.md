@@ -40,7 +40,7 @@ TODO: Customize device classes
 [homee]: https://hom.ee
 [buymecoffee]: https://ko-fi.com/freshlybrewed
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/FreshlyBrewedCode/hacs-homee.svg?style=for-the-badge
+[commits-shield]: https://img.shields.io/github/last-commit/FreshlyBrewedCode/hacs-homee.svg?style=for-the-badge
 [commits]: https://github.com/FreshlyBrewedCode/hacs-homee/commits/master
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
