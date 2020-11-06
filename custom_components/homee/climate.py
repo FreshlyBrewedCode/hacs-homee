@@ -2,10 +2,6 @@
 
 import logging
 
-from pymee import Homee
-from pymee.const import AttributeType, NodeProfile
-from pymee.model import HomeeAttribute, HomeeNode
-
 import homeassistant
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
@@ -16,6 +12,9 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.const import HVAC_MODE_HEAT
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from pymee import Homee
+from pymee.const import AttributeType, NodeProfile
+from pymee.model import HomeeAttribute, HomeeNode
 
 from . import HomeeNodeHelper
 from .const import DOMAIN

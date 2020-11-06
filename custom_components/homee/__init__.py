@@ -1,21 +1,20 @@
 """The homee integration."""
 import asyncio
 
-from pymee import Homee
-from pymee.model import HomeeAttribute, HomeeNode
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity import Entity
+from pymee import Homee
+from pymee.model import HomeeAttribute, HomeeNode
+import voluptuous as vol
 
 from .const import ATTR_ATTRIBUTE, ATTR_NODE, ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
 
 # TODO
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["light", "climate", "binary_sensor"]
+PLATFORMS = ["light", "climate", "binary_sensor", "switch"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -122,12 +121,16 @@ class HomeeNodeHelper:
 
     async def async_set_value(self, attribute_type: int, value: float):
         """Set an attribute value on the homee node."""
+        await self.async_set_value_by_id(self.get_attribute(attribute_type).id, value)
+
+    async def async_set_value_by_id(self, attribute_id: int, value: float):
+        """Set an attribute value on the homee node."""
         await self._entity.hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
             {
                 ATTR_NODE: self._node.id,
-                ATTR_ATTRIBUTE: self.get_attribute(attribute_type).id,
+                ATTR_ATTRIBUTE: attribute_id,
                 ATTR_VALUE: value,
             },
         )
