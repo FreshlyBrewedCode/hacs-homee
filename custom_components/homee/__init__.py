@@ -74,9 +74,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         homee: Homee = hass.data[DOMAIN][entry.entry_id]
         hass.data[DOMAIN].pop(entry.entry_id)
 
-        # Schedule homee disconnect and wait for disconnected event
+        # Schedule homee disconnect
         homee.disconnect()
-        await homee.wait_until_disconnected()
 
         # Remove services
         hass.services.async_remove(DOMAIN, SERVICE_SET_VALUE)

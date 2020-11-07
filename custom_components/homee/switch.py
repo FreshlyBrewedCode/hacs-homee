@@ -73,6 +73,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
 async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
     """Unload a config entry."""
+    return True
 
 
 class HomeeSwitch(SwitchEntity):
