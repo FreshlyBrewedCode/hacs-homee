@@ -1,8 +1,19 @@
 {
-  "title": "homee",
   "config": {
+    "flow_title": "homee {name} ({host})",
     "step": {
       "user": {
+        "title": "Configure homee",
+        "description": "Manually enter the ip address of the homee you want to connect.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Configure homee",
+        "description": "Discovered homee {id} at {host}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",

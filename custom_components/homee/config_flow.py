@@ -5,20 +5,25 @@ import logging
 from homeassistant import config_entries, core, exceptions
 from homeassistant.components import zeroconf
 from homeassistant.components.zeroconf import ATTR_HOST
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from pymee import (
     AuthenticationFailedException as HomeeAuthenticationFailedException,
     Homee,
 )
 import voluptuous as vol
+from voluptuous.schema_builder import Required
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
-DATA_SCHEMA = vol.Schema({CONF_HOST: str, CONF_USERNAME: str, CONF_PASSWORD: str})
-DISCOVERED_SCHEMA = vol.Schema({CONF_USERNAME: str, CONF_PASSWORD: str})
+DATA_SCHEMA = schema = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -51,20 +56,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.discovered_host = None
+        self.homee_host: str = None
+        self.homee_id: str = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial user step."""
         errors = {}
         if user_input is not None:
-            if self.discovered_host is not None:
-                user_input[ATTR_HOST] = self.discovered_host
 
             try:
                 info = await validate_input(self.hass, user_input)
 
                 return self.async_create_entry(
-                    title=info["title"],
+                    title=info["description"],
                     description=info["description"],
                     data=user_input,
                 )
@@ -76,15 +80,67 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-        schema = DATA_SCHEMA if self.discovered_host is None else DISCOVERED_SCHEMA
-
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+        )
 
     async def async_step_zeroconf(self, discovery_info=None):
-        """Handle the initial step."""
-        await self.async_set_unique_id(discovery_info.get(zeroconf.ATTR_NAME))
-        self.discovered_host = discovery_info.get(zeroconf.ATTR_HOST)
-        return await self.async_step_user()
+        """Handle the zerconf discovery."""
+
+        # Get the homee id from the discovery info
+        self.homee_id = discovery_info.get(zeroconf.ATTR_NAME)
+        # homee-<HOMEE ID>._sftp-ssh._tcp.local.
+        self.homee_id = self.homee_id.split("-")[1].split(".")[0]
+
+        # Get the host (ip address) from the discovery info
+        self.homee_host = discovery_info.get(zeroconf.ATTR_HOST)
+
+        # Update the title of the discovered device
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context.update(
+            {"title_placeholders": {"host": self.homee_host, "name": self.homee_id}}
+        )
+
+        await self.async_set_unique_id(self.homee_id)
+        self._abort_if_unique_id_configured()
+
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(self, user_input=None):
+        """Handle the zeroconf confirm step."""
+        errors = {}
+        if user_input is not None:
+
+            try:
+                info = await validate_input(self.hass, user_input)
+                user_input["homee_id"] = self.homee_id
+
+                return self.async_create_entry(
+                    title=f"{self.homee_id} ({self.homee_host})",
+                    data=user_input,
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+        schema = DATA_SCHEMA.extend(
+            {
+                vol.Required(CONF_HOST, default=self.homee_host): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={"id": self.homee_id, "host": self.homee_host},
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):
