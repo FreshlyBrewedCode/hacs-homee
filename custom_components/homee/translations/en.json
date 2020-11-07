@@ -1,5 +1,6 @@
 {
     "config": {
+        "flow_title": "homee {name} ({host})",
         "abort": {
             "already_configured": "Device is already configured"
         },
@@ -10,13 +11,23 @@
         },
         "step": {
             "user": {
+                "title": "Configure homee",
+                "description": "Manually enter the ip address of the homee you want to connect.",
                 "data": {
                     "host": "Host",
                     "password": "Password",
                     "username": "Username"
                 }
+            },
+            "zeroconf_confirm": {
+              "title": "Configure homee",
+              "description": "Discovered homee {id} at {host}",
+              "data": {
+                "host": "Host",
+                "password": "Password",
+                "username": "Username"
+              }
             }
         }
-    },
-    "title": "homee"
+    }
 }
