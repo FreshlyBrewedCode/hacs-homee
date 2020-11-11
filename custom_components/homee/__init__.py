@@ -150,6 +150,13 @@ class HomeeNodeEntity:
         self._clear_node_listener = None
         self._unique_id = node.id
 
+        self._homee_data = {
+            "id": node.id,
+            "name": node.name,
+            "profile": node.profile,
+            "attributes": [{"id": a.id, "type": a.type} for a in node.attributes],
+        }
+
     async def async_added_to_hass(self) -> None:
         """Add the homee binary sensor device to home assistant."""
         self.register_listener()
@@ -177,6 +184,16 @@ class HomeeNodeEntity:
     def raw_data(self):
         """Return the raw data of the node."""
         return self._node._data
+
+    @property
+    def state_attributes(self):
+        data = self._entity.__class__.__bases__[1].state_attributes.fget(self)
+        if data is None:
+            data = {}
+
+        data["homee_data"] = self._homee_data
+
+        return data
 
     async def async_update(self):
         """Fetch new state data for this light."""
