@@ -14,9 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from pymee import Homee
 from pymee.const import AttributeType, NodeProfile
-from pymee.model import HomeeAttribute, HomeeNode
+from pymee.model import HomeeNode
 
-from . import HomeeNodeHelper
+from . import HomeeNodeEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 HOMEE_UNIT_TO_HA_UNIT = {"°C": TEMP_CELSIUS, "°F": TEMP_FAHRENHEIT}
 
 
-def get_climate_features(node: HomeeNodeHelper, default=0) -> int:
+def get_climate_features(node: HomeeNodeEntity, default=0) -> int:
     """Determine the supported climate features of a homee node based on the available attributes."""
     features = default
 
@@ -64,38 +64,14 @@ def is_climate_node(node: HomeeNode):
     ]
 
 
-class HomeeClimate(ClimateEntity):
+class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     """Representation of a homee climate device."""
 
     def __init__(self, node: HomeeNode):
         """Initialize a homee climate entity."""
-        self._node = node
-        self.node = HomeeNodeHelper(node, self)
-        self._supported_features = get_climate_features(self.node)
+        HomeeNodeEntity.__init__(self, node, self)
+        self._supported_features = get_climate_features(self)
         _LOGGER.info(f"{node.name}: {node.profile}")
-
-    async def async_added_to_hass(self) -> None:
-        """Add the homee climate device to home assistant."""
-        self.node.register_listener()
-
-    async def async_will_remove_from_hass(self):
-        """Cleanup the entity."""
-        self.node.clear_listener()
-
-    @property
-    def should_poll(self) -> bool:
-        """Return if the entity should poll."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._node.id
-
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return self._node.name
 
     @property
     def supported_features(self):
@@ -105,9 +81,7 @@ class HomeeClimate(ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the temperature unit of the device."""
-        return HOMEE_UNIT_TO_HA_UNIT[
-            self.node.get_attribute(AttributeType.TEMPERATURE).unit
-        ]
+        return HOMEE_UNIT_TO_HA_UNIT[self.get_attribute(AttributeType.TEMPERATURE).unit]
 
     @property
     def hvac_modes(self):
@@ -122,29 +96,22 @@ class HomeeClimate(ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.node.attribute(AttributeType.TEMPERATURE)
+        return self.attribute(AttributeType.TEMPERATURE)
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self.node.attribute(AttributeType.TARGET_TEMPERATURE)
+        return self.attribute(AttributeType.TARGET_TEMPERATURE)
 
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self.node.get_attribute(AttributeType.TARGET_TEMPERATURE).step_value
+        return self.get_attribute(AttributeType.TARGET_TEMPERATURE).step_value
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
 
         if ATTR_TEMPERATURE in kwargs:
-            await self.node.async_set_value(
+            await self.async_set_value(
                 AttributeType.TARGET_TEMPERATURE, kwargs[ATTR_TEMPERATURE]
             )
-
-    async def async_update(self):
-        """Fetch new state data for this light."""
-        self._node._remap_attributes()
-
-    def _on_node_updated(self, node: HomeeNode, attribute: HomeeAttribute):
-        self.schedule_update_ha_state()

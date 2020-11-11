@@ -12,15 +12,15 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from pymee import Homee
 from pymee.const import AttributeType, NodeProfile
-from pymee.model import HomeeAttribute, HomeeNode
+from pymee.model import HomeeNode
 
-from . import HomeeNodeHelper
+from . import HomeeNodeEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_device_class(node: HomeeNodeHelper) -> int:
+def get_device_class(node: HomeeNodeEntity) -> int:
     """Determine the device class a homee node based on the available attributes."""
     device_class = DEVICE_CLASS_OPENING
     state_attr = AttributeType.OPEN_CLOSE
@@ -63,49 +63,22 @@ async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
     """Unload a config entry."""
 
 
-class HomeeBinarySensor(BinarySensorEntity):
+class HomeeBinarySensor(HomeeNodeEntity, BinarySensorEntity):
     """Representation of a homee binary sensor device."""
 
     def __init__(self, node: HomeeNode):
         """Initialize a homee binary sensor entity."""
-        self._node = node
-        self.node = HomeeNodeHelper(node, self)
-        self._device_class, self._state_attr = get_device_class(self.node)
+        HomeeNodeEntity.__init__(self, node, self)
+
+        self._device_class, self._state_attr = get_device_class(self)
         _LOGGER.info(f"{node.name}: {node.profile}")
-
-    async def async_added_to_hass(self) -> None:
-        """Add the homee binary sensor device to home assistant."""
-        self.node.register_listener()
-
-    async def async_will_remove_from_hass(self):
-        """Cleanup the entity."""
-        self.node.clear_listener()
-
-    @property
-    def should_poll(self) -> bool:
-        """Return if the entity should poll."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._node.id
-
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return self._node.name
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return bool(self.node.attribute(self._state_attr))
+        return bool(self.attribute(self._state_attr))
 
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
-
-    async def async_update(self):
-        """Fetch new state data for this light."""
-        self._node._remap_attributes()

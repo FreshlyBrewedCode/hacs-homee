@@ -21,15 +21,15 @@ from homeassistant.util.color import (
 )
 from pymee import Homee
 from pymee.const import AttributeType, NodeProfile
-from pymee.model import HomeeAttribute, HomeeNode
+from pymee.model import HomeeNode
 
-from . import HomeeNodeHelper
+from . import HomeeNodeEntity
 from .const import DOMAIN, HOMEE_LIGHT_MAX_MIRED, HOMEE_LIGHT_MIN_MIRED
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_light_features(node: HomeeNodeHelper, default=0) -> int:
+def get_light_features(node: HomeeNodeEntity, default=0) -> int:
     """Determine the supported features of a homee light based on the available attributes."""
     features = default
 
@@ -90,54 +90,14 @@ def is_light_node(node: HomeeNode):
     )
 
 
-class HomeeLight(LightEntity):
+class HomeeLight(HomeeNodeEntity, LightEntity):
     """Representation of a homee light."""
 
     def __init__(self, node: HomeeNode):
         """Initialize a homee light."""
-        self._node = node
-        self.node = HomeeNodeHelper(node, self)
-        # self._remove_node_updated_listener = None
-        self._supported_features = get_light_features(self.node)
+        HomeeNodeEntity.__init__(self, node, self)
+        self._supported_features = get_light_features(self)
         _LOGGER.info(f"{node.name}: {node.profile}")
-
-    async def async_added_to_hass(self) -> None:
-        """Add the homee light to home assistant."""
-
-        # def handle_attribute_update(event):
-        #     node = event.data.get(ATTR_NODE)
-        #     if node == self._node.id:
-        #         self.schedule_update_ha_state()
-
-        # self._close_attribute_listener = self.hass.bus.async_listen(
-        #     EVENT_HOMEE_ATTRIBUTE_CHANGED, handle_attribute_update
-        # )
-
-        # self._remove_node_updated_listener = self._node.add_on_changed_listener(
-        #     self._on_node_updated
-        # )
-        self.node.register_listener()
-
-    async def async_will_remove_from_hass(self):
-        """Cleanup the entity."""
-        # if self._remove_node_updated_listener != None:
-        #     self._remove_node_updated_listener()
-        self.node.clear_listener()
-
-    @property
-    def should_poll(self) -> bool:
-        """Return if the light should poll."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the light."""
-        return self._node.id
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._node.name
 
     @property
     def supported_features(self):
@@ -147,20 +107,20 @@ class HomeeLight(LightEntity):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return self.node.attribute(AttributeType.DIMMING_LEVEL) * 2.55
+        return self.attribute(AttributeType.DIMMING_LEVEL) * 2.55
 
     @property
     def hs_color(self):
         """Return the color of the light."""
         # Handle color temperature mode
-        if self.node.has_attribute(AttributeType.COLOR_MODE):
-            mode = self.node.attribute(AttributeType.COLOR_MODE)
+        if self.has_attribute(AttributeType.COLOR_MODE):
+            mode = self.attribute(AttributeType.COLOR_MODE)
 
             # Light is in color temperature mode
             if mode == 2:
                 return None
 
-        rgb = decimal_to_rgb_list(self.node.attribute(AttributeType.COLOR))
+        rgb = decimal_to_rgb_list(self.attribute(AttributeType.COLOR))
         return color_RGB_to_hs(rgb[0], rgb[1], rgb[2])
 
     @property
@@ -177,41 +137,34 @@ class HomeeLight(LightEntity):
     def color_temp(self):
         """Return the color temperature of the light."""
         return color_temperature_kelvin_to_mired(
-            self.node.attribute(AttributeType.COLOR_TEMPERATURE)
+            self.attribute(AttributeType.COLOR_TEMPERATURE)
         )
 
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self.node.attribute(AttributeType.ON_OFF)
+        return self.attribute(AttributeType.ON_OFF)
 
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        await self.node.async_set_value(AttributeType.ON_OFF, 1)
+        await self.async_set_value(AttributeType.ON_OFF, 1)
 
         if ATTR_BRIGHTNESS in kwargs:
-            await self.node.async_set_value(
+            await self.async_set_value(
                 AttributeType.DIMMING_LEVEL, kwargs[ATTR_BRIGHTNESS] / 2.55
             )
         if ATTR_COLOR_TEMP in kwargs:
-            await self.node.async_set_value(
+            await self.async_set_value(
                 AttributeType.COLOR_TEMPERATURE,
                 color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]),
             )
         if ATTR_HS_COLOR in kwargs:
             color = kwargs[ATTR_HS_COLOR]
-            await self.node.async_set_value(
+            await self.async_set_value(
                 AttributeType.COLOR,
                 rgb_list_to_decimal(color_hs_to_RGB(*color)),
             )
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        await self.node.async_set_value(AttributeType.ON_OFF, 0)
-
-    async def async_update(self):
-        """Fetch new state data for this light."""
-        self._node._remap_attributes()
-
-    def _on_node_updated(self, node: HomeeNode, attribute: HomeeAttribute):
-        self.schedule_update_ha_state()
+        await self.async_set_value(AttributeType.ON_OFF, 0)
