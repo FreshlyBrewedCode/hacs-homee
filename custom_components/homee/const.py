@@ -13,6 +13,3 @@ ATTR_VALUE = "value"
 
 HOMEE_LIGHT_MIN_MIRED = 153
 HOMEE_LIGHT_MAX_MIRED = 556
-
-# Options
-OPT_CLASS_FROM_ICONS = "class_from_icons"

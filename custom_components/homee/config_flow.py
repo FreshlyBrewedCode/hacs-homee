@@ -161,14 +161,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        OPT_CLASS_FROM_ICONS,
-                        default=self.entry.options.get(OPT_CLASS_FROM_ICONS, True),
-                    ): bool
-                }
-            ),
+            data_schema=vol.Schema({}),
         )
 
 
