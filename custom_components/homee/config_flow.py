@@ -4,17 +4,17 @@ import logging
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.components import zeroconf
-from homeassistant.components.zeroconf import ATTR_HOST
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+
+# import homeassistant.helpers.config_validation as cv
 from pymee import (
     AuthenticationFailedException as HomeeAuthenticationFailedException,
     Homee,
 )
 import voluptuous as vol
-from voluptuous.schema_builder import Required
 
-from .const import DOMAIN, OPT_CLASS_FROM_ICONS
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,7 +120,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             try:
-                info = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
                 user_input["homee_id"] = self.homee_id
 
                 return self.async_create_entry(
