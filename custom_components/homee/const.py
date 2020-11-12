@@ -13,3 +13,6 @@ ATTR_VALUE = "value"
 
 HOMEE_LIGHT_MIN_MIRED = 153
 HOMEE_LIGHT_MAX_MIRED = 556
+
+# Options
+OPT_ADD_HOME_DATA = "add_homee_data"

@@ -6,7 +6,6 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-
 # import homeassistant.helpers.config_validation as cv
 from pymee import (
     AuthenticationFailedException as HomeeAuthenticationFailedException,
@@ -14,7 +13,7 @@ from pymee import (
 )
 import voluptuous as vol
 
-from .const import DOMAIN
+from .const import DOMAIN, OPT_ADD_HOME_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,7 +160,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        OPT_ADD_HOME_DATA,
+                        default=self.entry.options.get(OPT_ADD_HOME_DATA, False),
+                    ): bool
+                }
+            ),
         )
 
 

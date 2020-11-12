@@ -65,7 +65,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         switch_count = 0
         for attribute in node.attributes:
             if attribute.type == AttributeType.ON_OFF:
-                devices.append(HomeeSwitch(node, attribute, switch_count))
+                devices.append(HomeeSwitch(node, config_entry, attribute, switch_count))
                 switch_count += 1
     if devices:
         async_add_devices(devices)
@@ -79,10 +79,14 @@ class HomeeSwitch(HomeeNodeEntity, SwitchEntity):
     """Representation of a homee switch."""
 
     def __init__(
-        self, node: HomeeNode, on_off_attribute: HomeeAttribute = None, switch_index=-1
+        self,
+        node: HomeeNode,
+        entry: ConfigEntry,
+        on_off_attribute: HomeeAttribute = None,
+        switch_index=-1,
     ):
         """Initialize a homee switch entity."""
-        HomeeNodeEntity.__init__(self, node, self)
+        HomeeNodeEntity.__init__(self, node, self, entry)
         self._on_off = on_off_attribute
         self._switch_index = switch_index
         self._device_class = get_device_class(node)

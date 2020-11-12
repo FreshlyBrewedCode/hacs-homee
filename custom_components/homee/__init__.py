@@ -10,7 +10,14 @@ from pymee import Homee
 from pymee.model import HomeeAttribute, HomeeNode
 import voluptuous as vol
 
-from .const import ATTR_ATTRIBUTE, ATTR_NODE, ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
+from .const import (
+    ATTR_ATTRIBUTE,
+    ATTR_NODE,
+    ATTR_VALUE,
+    DOMAIN,
+    OPT_ADD_HOME_DATA,
+    SERVICE_SET_VALUE,
+)
 
 _LOGGER = logging.getLogger(DOMAIN)
 
@@ -143,12 +150,13 @@ class HomeeNodeHelper:
 
 
 class HomeeNodeEntity:
-    def __init__(self, node: HomeeNode, entity: Entity) -> None:
+    def __init__(self, node: HomeeNode, entity: Entity, entry: ConfigEntry) -> None:
         """Initialize the wrapper using a HomeeNode and target entity."""
         self._node = node
         self._entity = entity
         self._clear_node_listener = None
         self._unique_id = node.id
+        self._entry = entry
 
         self._homee_data = {
             "id": node.id,
@@ -191,9 +199,10 @@ class HomeeNodeEntity:
         if data is None:
             data = {}
 
-        data["homee_data"] = self._homee_data
+        if self._entry.options.get(OPT_ADD_HOME_DATA, False):
+            data["homee_data"] = self._homee_data
 
-        return data
+        return data if data != {} else None
 
     async def async_update(self):
         """Fetch new state data for this light."""

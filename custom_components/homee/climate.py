@@ -46,7 +46,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     for node in homee.nodes:
         if not is_climate_node(node):
             continue
-        devices.append(HomeeClimate(node))
+        devices.append(HomeeClimate(node, config_entry))
     if devices:
         async_add_devices(devices)
 
@@ -67,9 +67,9 @@ def is_climate_node(node: HomeeNode):
 class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     """Representation of a homee climate device."""
 
-    def __init__(self, node: HomeeNode):
+    def __init__(self, node: HomeeNode, entry: ConfigEntry):
         """Initialize a homee climate entity."""
-        HomeeNodeEntity.__init__(self, node, self)
+        HomeeNodeEntity.__init__(self, node, self, entry)
         self._supported_features = get_climate_features(self)
         _LOGGER.info(f"{node.name}: {node.profile}")
 

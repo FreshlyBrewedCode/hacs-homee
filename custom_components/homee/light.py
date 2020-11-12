@@ -61,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     for node in homee.nodes:
         if not is_light_node(node):
             continue
-        devices.append(HomeeLight(node))
+        devices.append(HomeeLight(node, config_entry))
     if devices:
         async_add_devices(devices)
 
@@ -93,9 +93,9 @@ def is_light_node(node: HomeeNode):
 class HomeeLight(HomeeNodeEntity, LightEntity):
     """Representation of a homee light."""
 
-    def __init__(self, node: HomeeNode):
+    def __init__(self, node: HomeeNode, entry: ConfigEntry):
         """Initialize a homee light."""
-        HomeeNodeEntity.__init__(self, node, self)
+        HomeeNodeEntity.__init__(self, node, self, entry)
         self._supported_features = get_light_features(self)
         _LOGGER.info(f"{node.name}: {node.profile}")
 
