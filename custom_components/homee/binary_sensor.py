@@ -68,7 +68,6 @@ class HomeeBinarySensor(HomeeNodeEntity, BinarySensorEntity):
         HomeeNodeEntity.__init__(self, node, self, entry)
 
         self._device_class, self._state_attr = get_device_class(self)
-        _LOGGER.info(f"{node.name}: {node.profile}")
 
     @property
     def is_on(self):

@@ -69,7 +69,6 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
         """Initialize a homee climate entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
         self._supported_features = get_climate_features(self)
-        _LOGGER.info(f"{node.name}: {node.profile}")
 
     @property
     def supported_features(self):
