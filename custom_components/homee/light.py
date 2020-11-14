@@ -19,12 +19,11 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
 )
-from pymee import Homee
 from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeNode
 
-from . import HomeeNodeEntity
-from .const import DOMAIN, HOMEE_LIGHT_MAX_MIRED, HOMEE_LIGHT_MIN_MIRED
+from . import HomeeNodeEntity, helpers
+from .const import HOMEE_LIGHT_MAX_MIRED, HOMEE_LIGHT_MIN_MIRED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,10 +54,9 @@ def decimal_to_rgb_list(color):
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add the homee platform for the light integration."""
-    homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
 
     devices = []
-    for node in homee.nodes:
+    for node in helpers.get_imported_nodes(hass, config_entry):
         if not is_light_node(node):
             continue
         devices.append(HomeeLight(node, config_entry))

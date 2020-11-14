@@ -15,4 +15,6 @@ HOMEE_LIGHT_MIN_MIRED = 153
 HOMEE_LIGHT_MAX_MIRED = 556
 
 # Options
-OPT_ADD_HOME_DATA = "add_homee_data"
+CONF_INITIAL_OPTIONS = "initial_options"
+CONF_ADD_HOME_DATA = "add_homee_data"
+CONF_GROUPS = "groups"

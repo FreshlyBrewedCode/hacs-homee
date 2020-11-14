@@ -9,12 +9,10 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from pymee import Homee
 from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeAttribute, HomeeNode
 
-from . import HomeeNodeEntity
-from .const import DOMAIN
+from . import HomeeNodeEntity, helpers
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,10 +54,9 @@ def is_switch_node(node: HomeeNode):
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add the homee platform for the switch component."""
-    homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
 
     devices = []
-    for node in homee.nodes:
+    for node in helpers.get_imported_nodes(hass, config_entry):
         if not is_switch_node(node):
             continue
         switch_count = 0

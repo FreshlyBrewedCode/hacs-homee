@@ -12,12 +12,10 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.const import HVAC_MODE_HEAT
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from pymee import Homee
 from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeNode
 
-from . import HomeeNodeEntity
-from .const import DOMAIN
+from . import HomeeNodeEntity, helpers
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +38,10 @@ def get_climate_features(node: HomeeNodeEntity, default=0) -> int:
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add the homee platform for the light integration."""
-    homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
+    # homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
 
     devices = []
-    for node in homee.nodes:
+    for node in helpers.get_imported_nodes(hass, config_entry):
         if not is_climate_node(node):
             continue
         devices.append(HomeeClimate(node, config_entry))

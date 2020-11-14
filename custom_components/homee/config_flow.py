@@ -6,6 +6,8 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+
 # import homeassistant.helpers.config_validation as cv
 from pymee import (
     AuthenticationFailedException as HomeeAuthenticationFailedException,
@@ -13,7 +15,7 @@ from pymee import (
 )
 import voluptuous as vol
 
-from .const import DOMAIN, OPT_ADD_HOME_DATA
+from .const import CONF_ADD_HOME_DATA, CONF_GROUPS, CONF_INITIAL_OPTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +28,25 @@ DATA_SCHEMA = schema = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+def get_options_schema(homee: Homee, default_options={}):
+    groups = [str(g.id) for g in homee.groups]
+    groups_selection = {str(g.id): f"{g.name} ({len(g.nodes)})" for g in homee.groups}
+
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_GROUPS,
+                default=default_options.get(CONF_GROUPS, groups),
+            ): cv.multi_select(groups_selection),
+            vol.Required(
+                CONF_ADD_HOME_DATA,
+                default=default_options.get(CONF_ADD_HOME_DATA, False),
+            ): bool,
+        }
+    )
+
+
+async def validate_and_connect(hass: core.HomeAssistant, data) -> Homee:
     """Validate the user input allows us to connect."""
 
     # TODO DATA SCHEMA validation
@@ -42,8 +62,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     except asyncio.TimeoutError:
         raise CannotConnect
 
-    # Return info that you want to store in the config entry.
-    return {"title": "homee", "description": f"homee cube at {data[CONF_HOST]}"}
+    hass.async_create_task(homee.run())
+    await homee.wait_until_connected()
+    homee.disconnect()
+    await homee.wait_until_disconnected()
+
+    # Return homee instance
+    return homee
 
 
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,6 +88,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.homee_host: str = None
         self.homee_id: str = None
+        self.homee: Homee = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial user step."""
@@ -70,13 +96,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             try:
-                info = await validate_input(self.hass, user_input)
+                self.homee = await validate_and_connect(self.hass, user_input)
 
-                return self.async_create_entry(
-                    title=info["description"],
-                    description=info["description"],
-                    data=user_input,
-                )
+                return await self.async_step_config()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -119,7 +141,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             try:
-                await validate_input(self.hass, user_input)
+                await validate_and_connect(self.hass, user_input)
                 user_input["homee_id"] = self.homee_id
 
                 return self.async_create_entry(
@@ -147,6 +169,24 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"id": self.homee_id, "host": self.homee_host},
         )
 
+    async def async_step_config(self, user_input=None):
+        """Configure initial options."""
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title=f"{self.homee.settings.uid} ({self.homee.host})",
+                data={
+                    CONF_HOST: self.homee.host,
+                    CONF_USERNAME: self.homee.user,
+                    CONF_PASSWORD: self.homee.password,
+                    CONF_INITIAL_OPTIONS: user_input,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="config", data_schema=get_options_schema(self.homee)
+        )
+
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, entry: config_entries.ConfigEntry) -> None:
@@ -158,16 +198,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        homee: Homee = self.hass.data[DOMAIN][self.entry.entry_id]
+
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        OPT_ADD_HOME_DATA,
-                        default=self.entry.options.get(OPT_ADD_HOME_DATA, False),
-                    ): bool
-                }
-            ),
+            step_id="init", data_schema=get_options_schema(homee, self.entry.options)
         )
 
 

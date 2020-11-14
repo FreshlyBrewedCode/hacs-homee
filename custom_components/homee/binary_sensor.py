@@ -10,12 +10,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from pymee import Homee
 from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeNode
 
-from . import HomeeNodeEntity
-from .const import DOMAIN
+from . import HomeeNodeEntity, helpers
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,10 +46,9 @@ def is_binary_sensor_node(node: HomeeNode):
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add the homee platform for the binary sensor integration."""
-    homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
 
     devices = []
-    for node in homee.nodes:
+    for node in helpers.get_imported_nodes(hass, config_entry):
         if not is_binary_sensor_node(node):
             continue
         devices.append(HomeeBinarySensor(node, config_entry))

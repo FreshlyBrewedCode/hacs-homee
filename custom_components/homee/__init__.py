@@ -14,8 +14,9 @@ from .const import (
     ATTR_ATTRIBUTE,
     ATTR_NODE,
     ATTR_VALUE,
+    CONF_ADD_HOME_DATA,
+    CONF_INITIAL_OPTIONS,
     DOMAIN,
-    OPT_ADD_HOME_DATA,
     SERVICE_SET_VALUE,
 )
 
@@ -43,6 +44,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         loop=hass.loop,
     )
     hass.data[DOMAIN][entry.entry_id] = homee
+
+    # Migrate initial options
+    if entry.options is None or entry.options == {}:
+        options = entry.data.get(CONF_INITIAL_OPTIONS, {})
+        hass.config_entries.async_update_entry(entry, options=options)
 
     # Start the homee websocket connection as a new task and wait until we are connected
     hass.loop.create_task(homee.run())
@@ -199,7 +205,7 @@ class HomeeNodeEntity:
         if data is None:
             data = {}
 
-        if self._entry.options.get(OPT_ADD_HOME_DATA, False):
+        if self._entry.options.get(CONF_ADD_HOME_DATA, False):
             data["homee_data"] = self._homee_data
 
         return data if data != {} else None
