@@ -6,6 +6,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 import homeassistant.helpers.config_validation as cv
 
 # import homeassistant.helpers.config_validation as cv
@@ -97,12 +98,16 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 self.homee = await validate_and_connect(self.hass, user_input)
+                await self.async_set_unique_id(self.homee.settings.uid)
+                self._abort_if_unique_id_configured()
 
                 return await self.async_step_config()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except AbortFlow:
+                return self.async_abort(reason="already_configured")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -141,17 +146,17 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             try:
-                await validate_and_connect(self.hass, user_input)
-                user_input["homee_id"] = self.homee_id
+                self.homee = await validate_and_connect(self.hass, user_input)
+                await self.async_set_unique_id(self.homee.settings.uid)
+                self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(
-                    title=f"{self.homee_id} ({self.homee_host})",
-                    data=user_input,
-                )
+                return await self.async_step_config()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except AbortFlow:
+                return self.async_abort(reason="already_configured")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
