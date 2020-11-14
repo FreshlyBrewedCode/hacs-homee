@@ -18,3 +18,5 @@ HOMEE_LIGHT_MAX_MIRED = 556
 CONF_INITIAL_OPTIONS = "initial_options"
 CONF_ADD_HOME_DATA = "add_homee_data"
 CONF_GROUPS = "groups"
+CONF_WINDOW_GROUPS = "window_groups"
+CONF_DOOR_GROUPS = "door_groups"

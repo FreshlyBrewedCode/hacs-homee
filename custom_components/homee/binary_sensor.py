@@ -1,13 +1,16 @@
 """The homee binary sensor platform."""
 
+from custom_components.homee.const import CONF_DOOR_GROUPS, CONF_WINDOW_GROUPS
 import logging
 
 import homeassistant
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_DOOR,
     DEVICE_CLASS_LOCK,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PLUG,
     BinarySensorEntity,
+    DEVICE_CLASS_WINDOW,
 )
 from homeassistant.config_entries import ConfigEntry
 from pymee.const import AttributeType, NodeProfile
@@ -67,7 +70,28 @@ class HomeeBinarySensor(HomeeNodeEntity, BinarySensorEntity):
         """Initialize a homee binary sensor entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
 
+        self._device_class = DEVICE_CLASS_OPENING
+        self._state_attr = AttributeType.OPEN_CLOSE
+
+        self._configure_device_class()
+
+    def _configure_device_class(self):
+        """Configure the device class of the sensor"""
+
+        # Get the initial device class and state attribute
         self._device_class, self._state_attr = get_device_class(self)
+
+        # Set Window/Door device class based on configured groups
+        if any(
+            str(group.id) in self._entry.options.get(CONF_WINDOW_GROUPS, [])
+            for group in self._node.groups
+        ):
+            self._device_class = DEVICE_CLASS_WINDOW
+        elif any(
+            str(group.id) in self._entry.options.get(CONF_DOOR_GROUPS, [])
+            for group in self._node.groups
+        ):
+            self._device_class = DEVICE_CLASS_DOOR
 
     @property
     def is_on(self):

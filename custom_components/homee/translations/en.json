@@ -33,6 +33,8 @@
               "description": "Configure the homee integration. You can still change these settings later.",
               "data": {
                 "groups": "The groups that should be imported",
+                "window_groups": "Groups that contain window sensors",
+                "door_groups": "Groups that contain door sensors",
                 "add_homee_data": "Add (debug) information about the homee node and attributes to each entity"
               }
             }
@@ -44,6 +46,8 @@
             "description": "Configure the homee integration. You may need to restart Home Assistant to apply the changes.",
             "data": {
               "groups": "The groups that should be imported",
+              "window_groups": "Groups that contain window sensors",
+              "door_groups": "Groups that contain door sensors",
               "add_homee_data": "Add (debug) information about the homee node and attributes to each entity"
             }
           }

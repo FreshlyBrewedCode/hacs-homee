@@ -16,7 +16,14 @@ from pymee import (
 )
 import voluptuous as vol
 
-from .const import CONF_ADD_HOME_DATA, CONF_GROUPS, CONF_INITIAL_OPTIONS, DOMAIN
+from .const import (
+    CONF_ADD_HOME_DATA,
+    CONF_DOOR_GROUPS,
+    CONF_GROUPS,
+    CONF_INITIAL_OPTIONS,
+    CONF_WINDOW_GROUPS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +45,14 @@ def get_options_schema(homee: Homee, default_options={}):
             vol.Required(
                 CONF_GROUPS,
                 default=default_options.get(CONF_GROUPS, groups),
+            ): cv.multi_select(groups_selection),
+            vol.Required(
+                CONF_WINDOW_GROUPS,
+                default=default_options.get(CONF_WINDOW_GROUPS, []),
+            ): cv.multi_select(groups_selection),
+            vol.Required(
+                CONF_DOOR_GROUPS,
+                default=default_options.get(CONF_DOOR_GROUPS, []),
             ): cv.multi_select(groups_selection),
             vol.Required(
                 CONF_ADD_HOME_DATA,
