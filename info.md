@@ -1,3 +1,5 @@
+# Home Assistant homee integration
+
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
@@ -11,31 +13,39 @@
 _Component to integrate with [homee][homee]._
 
 | :warning: This is a custom integration that is early in development and has so far only been tested in very specific environments and with a limited amount and variety of devices. Please backup your homee and Home Assistant instances before proceeding. |
-| --- |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 
 **This component will set up the following platforms.**
 
-Platform | Description
--- | --
-`binary_sensor` | Integrate homee devices that provide binary state information like `on`/`off` or `open`/`close`.
-`climate` | Integrate homee devices that provide temperature and can set a target temperature.
-`light` | Integrate lights from homee.
-`switch` | Integrate homee devices that can be turned `on`/`off` and can optionally provide information about the current power consumption.
+| Platform        | Description                                                                                                                       |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `binary_sensor` | Integrate homee devices that provide binary state information like `on`/`off` or `open`/`close`.                                  |
+| `climate`       | Integrate homee devices that provide temperature and can set a target temperature.                                                |
+| `light`         | Integrate lights from homee.                                                                                                      |
+| `switch`        | Integrate homee devices that can be turned `on`/`off` and can optionally provide information about the current power consumption. |
 
 ![homee][homee_logo]
 
 ## Configuration
+> :information_source: Because of a bug (#4) you should only configure **one** homee in Home Assistant.
 
-The integration will attempt to discover homee cubes in your network. Discovery is experimental and has not been properly tested yet. I recommend to add your homee cube(s) manually:
+The integration will attempt to discover homee cubes in your network. Discovered cubes should show up in the "Configuration" -> "Integrations" section along with the associated homee id and host ip address.
 
-1. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "homee"
-2. Select the "homee" integration from the list. If it does not show up you should check if it is installed correctly. Go to "Configuration" -> "Logs" and make sure there are no errors. Also make sure to restart home assistant after installation.
-3. In the dialog enter the host (ip address of the homee cube) as well as the username and password of a homee account that can access your cube.
-4. Hit submit. All supported devices will be automatically added to home assistant.
+1. In the HA UI go to "Configuration" -> "Integrations", click "Configure" on a discovered homee or click "+", search for "homee", and select the "homee" integration from the list.
+2. In the dialog enter the username and password of a homee account that can access your cube, as well as the host (ip address of the homee cube) if you are not configuring a discovered cube. Click submit.
+3. If the connection was successful you will see the "Initial Configuration" section. These options can also be changed later from by clicking on the "Options" button on the homee integration. For more details on the available options check the [Options section](#Options).
+4. Click submit. Your devices will be automatically added to Home Assistant.
 
-## Additional configuration
+## Options
 
-TODO: Customize device classes
+The following table shows the available options that can be configured in the "Initial Configuration" step or using the "Options" button on an existing configuration. Please note that you have to restart Home Assistant after changing the options using the "Options" button.
+
+| Option                                                                       | Default    | Description                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `The groups that should be imported`                                         | all groups | The integration will only import devices that are in any of the selected groups. Use this option to limit the devices that you want to import.                                                                                                                                                             |
+| `Groups that contain window sensors`                                         | empty      | Any `binary_sensor` that is in any of the selected groups will use the `window` device class. You should select a homee group that contains all of your window sensors.                                                                                                                                    |
+| `Groups that contain door sensors`                                           | empty      | Any `binary_sensor` that is in any of the selected groups will use the `door` device class. You should select a homee group that contains all of your door sensors.                                                                                                                                        |
+| `Add (debug) information about the homee node and attributes to each entity` | `False`    | Enabling this option will add the `homee_data` attribute to every entity created by this integration. The attribute contains information about the homee node (name, id, profile) and the attributes (id, type). This option can be useful for debugging or advanced automations when used with templates. |
 
 
 [homee]: https://hom.ee

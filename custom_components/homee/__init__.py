@@ -1,5 +1,6 @@
 """The homee integration."""
 import asyncio
+import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -9,7 +10,17 @@ from pymee import Homee
 from pymee.model import HomeeAttribute, HomeeNode
 import voluptuous as vol
 
-from .const import ATTR_ATTRIBUTE, ATTR_NODE, ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
+from .const import (
+    ATTR_ATTRIBUTE,
+    ATTR_NODE,
+    ATTR_VALUE,
+    CONF_ADD_HOME_DATA,
+    CONF_INITIAL_OPTIONS,
+    DOMAIN,
+    SERVICE_SET_VALUE,
+)
+
+_LOGGER = logging.getLogger(DOMAIN)
 
 # TODO
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
@@ -33,6 +44,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         loop=hass.loop,
     )
     hass.data[DOMAIN][entry.entry_id] = homee
+
+    # Migrate initial options
+    if entry.options is None or entry.options == {}:
+        options = entry.data.get(CONF_INITIAL_OPTIONS, {})
+        hass.config_entries.async_update_entry(entry, options=options)
 
     # Start the homee websocket connection as a new task and wait until we are connected
     hass.loop.create_task(homee.run())
@@ -91,6 +107,111 @@ class HomeeNodeHelper:
         self._node = node
         self._entity = entity
         self._clear_node_listener = None
+
+    def register_listener(self):
+        """Register the on_changed listener on the node."""
+        self._clear_node_listener = self._node.add_on_changed_listener(
+            self._on_node_updated
+        )
+
+    def clear_listener(self):
+        """Clear the on_changed listener on the node."""
+        if self._clear_node_listener is not None:
+            self._clear_node_listener()
+
+    def attribute(self, attributeType):
+        """Try to get the current value of the attribute of the given type."""
+        try:
+            return self._node.get_attribute_by_type(attributeType).current_value
+        except Exception:
+            raise AttributeNotFoundException(attributeType)
+
+    def get_attribute(self, attributeType):
+        """Get the attribute object of the given type."""
+        return self._node.get_attribute_by_type(attributeType)
+
+    def has_attribute(self, attributeType):
+        """Check if an attribute of the given type exists."""
+        return attributeType in self._node._attribute_map
+
+    async def async_set_value(self, attribute_type: int, value: float):
+        """Set an attribute value on the homee node."""
+        await self.async_set_value_by_id(self.get_attribute(attribute_type).id, value)
+
+    async def async_set_value_by_id(self, attribute_id: int, value: float):
+        """Set an attribute value on the homee node."""
+        await self._entity.hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_NODE: self._node.id,
+                ATTR_ATTRIBUTE: attribute_id,
+                ATTR_VALUE: value,
+            },
+        )
+
+    def _on_node_updated(self, node: HomeeNode, attribute: HomeeAttribute):
+        self._entity.schedule_update_ha_state()
+
+
+class HomeeNodeEntity:
+    def __init__(self, node: HomeeNode, entity: Entity, entry: ConfigEntry) -> None:
+        """Initialize the wrapper using a HomeeNode and target entity."""
+        self._node = node
+        self._entity = entity
+        self._clear_node_listener = None
+        self._unique_id = node.id
+        self._entry = entry
+
+        self._homee_data = {
+            "id": node.id,
+            "name": node.name,
+            "profile": node.profile,
+            "attributes": [{"id": a.id, "type": a.type} for a in node.attributes],
+        }
+
+    async def async_added_to_hass(self) -> None:
+        """Add the homee binary sensor device to home assistant."""
+        self.register_listener()
+
+    async def async_will_remove_from_hass(self):
+        """Cleanup the entity."""
+        self.clear_listener()
+
+    @property
+    def should_poll(self) -> bool:
+        """Return if the entity should poll."""
+        return False
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the entity."""
+        return self._unique_id
+
+    @property
+    def name(self):
+        """Return the display name of this entity."""
+        return self._node.name
+
+    @property
+    def raw_data(self):
+        """Return the raw data of the node."""
+        return self._node._data
+
+    @property
+    def state_attributes(self):
+        data = self._entity.__class__.__bases__[1].state_attributes.fget(self)
+        if data is None:
+            data = {}
+
+        if self._entry.options.get(CONF_ADD_HOME_DATA, False):
+            data["homee_data"] = self._homee_data
+
+        return data if data != {} else None
+
+    async def async_update(self):
+        """Fetch new state data for this light."""
+        self._node._remap_attributes()
 
     def register_listener(self):
         """Register the on_changed listener on the node."""

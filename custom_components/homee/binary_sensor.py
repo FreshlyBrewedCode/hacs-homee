@@ -1,26 +1,27 @@
 """The homee binary sensor platform."""
 
+from custom_components.homee.const import CONF_DOOR_GROUPS, CONF_WINDOW_GROUPS
 import logging
 
 import homeassistant
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_DOOR,
     DEVICE_CLASS_LOCK,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PLUG,
     BinarySensorEntity,
+    DEVICE_CLASS_WINDOW,
 )
 from homeassistant.config_entries import ConfigEntry
-from pymee import Homee
 from pymee.const import AttributeType, NodeProfile
-from pymee.model import HomeeAttribute, HomeeNode
+from pymee.model import HomeeNode
 
-from . import HomeeNodeHelper
-from .const import DOMAIN
+from . import HomeeNodeEntity, helpers
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_device_class(node: HomeeNodeHelper) -> int:
+def get_device_class(node: HomeeNodeEntity) -> int:
     """Determine the device class a homee node based on the available attributes."""
     device_class = DEVICE_CLASS_OPENING
     state_attr = AttributeType.OPEN_CLOSE
@@ -48,13 +49,12 @@ def is_binary_sensor_node(node: HomeeNode):
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add the homee platform for the binary sensor integration."""
-    homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
 
     devices = []
-    for node in homee.nodes:
+    for node in helpers.get_imported_nodes(hass, config_entry):
         if not is_binary_sensor_node(node):
             continue
-        devices.append(HomeeBinarySensor(node))
+        devices.append(HomeeBinarySensor(node, config_entry))
     if devices:
         async_add_devices(devices)
 
@@ -64,49 +64,42 @@ async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
     return True
 
 
-class HomeeBinarySensor(BinarySensorEntity):
+class HomeeBinarySensor(HomeeNodeEntity, BinarySensorEntity):
     """Representation of a homee binary sensor device."""
 
-    def __init__(self, node: HomeeNode):
+    def __init__(self, node: HomeeNode, entry: ConfigEntry):
         """Initialize a homee binary sensor entity."""
-        self._node = node
-        self.node = HomeeNodeHelper(node, self)
-        self._device_class, self._state_attr = get_device_class(self.node)
-        _LOGGER.info(f"{node.name}: {node.profile}")
+        HomeeNodeEntity.__init__(self, node, self, entry)
 
-    async def async_added_to_hass(self) -> None:
-        """Add the homee binary sensor device to home assistant."""
-        self.node.register_listener()
+        self._device_class = DEVICE_CLASS_OPENING
+        self._state_attr = AttributeType.OPEN_CLOSE
 
-    async def async_will_remove_from_hass(self):
-        """Cleanup the entity."""
-        self.node.clear_listener()
+        self._configure_device_class()
 
-    @property
-    def should_poll(self) -> bool:
-        """Return if the entity should poll."""
-        return False
+    def _configure_device_class(self):
+        """Configure the device class of the sensor"""
 
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._node.id
+        # Get the initial device class and state attribute
+        self._device_class, self._state_attr = get_device_class(self)
 
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return self._node.name
+        # Set Window/Door device class based on configured groups
+        if any(
+            str(group.id) in self._entry.options.get(CONF_WINDOW_GROUPS, [])
+            for group in self._node.groups
+        ):
+            self._device_class = DEVICE_CLASS_WINDOW
+        elif any(
+            str(group.id) in self._entry.options.get(CONF_DOOR_GROUPS, [])
+            for group in self._node.groups
+        ):
+            self._device_class = DEVICE_CLASS_DOOR
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return bool(self.node.attribute(self._state_attr))
+        return bool(self.attribute(self._state_attr))
 
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
-
-    async def async_update(self):
-        """Fetch new state data for this light."""
-        self._node._remap_attributes()

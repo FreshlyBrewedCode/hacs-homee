@@ -9,12 +9,10 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from pymee import Homee
 from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeAttribute, HomeeNode
 
-from . import HomeeNodeHelper
-from .const import DOMAIN
+from . import HomeeNodeEntity, helpers
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,16 +54,15 @@ def is_switch_node(node: HomeeNode):
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add the homee platform for the switch component."""
-    homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
 
     devices = []
-    for node in homee.nodes:
+    for node in helpers.get_imported_nodes(hass, config_entry):
         if not is_switch_node(node):
             continue
         switch_count = 0
         for attribute in node.attributes:
             if attribute.type == AttributeType.ON_OFF:
-                devices.append(HomeeSwitch(node, attribute, switch_count))
+                devices.append(HomeeSwitch(node, config_entry, attribute, switch_count))
                 switch_count += 1
     if devices:
         async_add_devices(devices)
@@ -76,37 +73,22 @@ async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
     return True
 
 
-class HomeeSwitch(SwitchEntity):
+class HomeeSwitch(HomeeNodeEntity, SwitchEntity):
     """Representation of a homee switch."""
 
     def __init__(
-        self, node: HomeeNode, on_off_attribute: HomeeAttribute = None, switch_index=-1
+        self,
+        node: HomeeNode,
+        entry: ConfigEntry,
+        on_off_attribute: HomeeAttribute = None,
+        switch_index=-1,
     ):
         """Initialize a homee switch entity."""
-        self._node = node
-        self.node = HomeeNodeHelper(node, self)
+        HomeeNodeEntity.__init__(self, node, self, entry)
         self._on_off = on_off_attribute
         self._switch_index = switch_index
         self._device_class = get_device_class(node)
-        _LOGGER.info(f"{node.name}: {node.profile}")
-
-    async def async_added_to_hass(self) -> None:
-        """Add the homee switch to home assistant."""
-        self.node.register_listener()
-
-    async def async_will_remove_from_hass(self):
-        """Cleanup the entity."""
-        self.node.clear_listener()
-
-    @property
-    def should_poll(self) -> bool:
-        """Return if the entity should poll."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._node.id}-switch-{self._on_off.id}"
+        self._unique_id = f"{self._node.id}-switch-{self._on_off.id}"
 
     @property
     def name(self):
@@ -126,17 +108,17 @@ class HomeeSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self.node.async_set_value_by_id(self._on_off.id, 1)
+        await self.async_set_value_by_id(self._on_off.id, 1)
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self.node.async_set_value_by_id(self._on_off.id, 0)
+        await self.async_set_value_by_id(self._on_off.id, 0)
 
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        if self.node.has_attribute(AttributeType.CURRENT_ENERGY_USE):
-            return self.node.attribute(AttributeType.CURRENT_ENERGY_USE)
+        if self.has_attribute(AttributeType.CURRENT_ENERGY_USE):
+            return self.attribute(AttributeType.CURRENT_ENERGY_USE)
 
         return None
 
@@ -144,7 +126,3 @@ class HomeeSwitch(SwitchEntity):
     def device_class(self):
         """Return the class of this node."""
         return self._device_class
-
-    async def async_update(self):
-        """Fetch new state data for this entity."""
-        self._node._remap_attributes()
