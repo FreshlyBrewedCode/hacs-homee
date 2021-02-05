@@ -119,6 +119,12 @@ class HomeeSwitch(HomeeNodeEntity, SwitchEntity):
         """Return the current power usage in W."""
         if self.has_attribute(AttributeType.CURRENT_ENERGY_USE):
             return self.attribute(AttributeType.CURRENT_ENERGY_USE)
+        
+    @property
+    def today_energy_kwh(self):
+        """Return the total power usage in kWh."""
+        if self.has_attribute(AttributeType.ACCUMULATED_ENERGY_USE):
+            return self.attribute(AttributeType.ACCUMULATED_ENERGY_USE)
 
         return None
 
