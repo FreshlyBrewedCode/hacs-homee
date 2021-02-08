@@ -6,7 +6,7 @@
   "issue_tracker": "https://github.com/FreshlyBrewedCode/hacs-homee/issues",
   "requirements": [
     "websocket_client==0.57.0",
-    "pymee==1.5.2",
+    "pymee==1.5.3",
     "websockets==8.1"
   ],
   "ssdp": [],
