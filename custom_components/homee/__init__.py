@@ -5,8 +5,11 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
+
 from pymee import Homee
+from pymee import model
 from pymee.model import HomeeAttribute, HomeeNode
 import voluptuous as vol
 
@@ -14,6 +17,7 @@ from .const import (
     ATTR_ATTRIBUTE,
     ATTR_NODE,
     ATTR_VALUE,
+    BRAIN_CUBE,
     CONF_ADD_HOME_DATA,
     CONF_INITIAL_OPTIONS,
     DOMAIN,
@@ -63,7 +67,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         hass.async_create_task(homee.set_value(node, attribute, value))
 
+    # Register services
     hass.services.async_register(DOMAIN, SERVICE_SET_VALUE, handle_set_value)
+
+    # Register homee device
+    # TODO: Add homee cube device using entities
+    # BODY: homee cube device should be added using `device_info` on homee cube related entities.
+    device_registry = await dr.async_get_registry(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, homee.host)},
+        identifiers={(DOMAIN, homee.settings.uid)},
+        manufacturer="homee GmbH",
+        name=f"{homee.settings.homee_name} Cube",
+        sw_version=homee.settings.cubes[0]["firmware"],
+        model=BRAIN_CUBE,
+    )
 
     # Forward entry setup to the platforms
     for component in PLATFORMS:

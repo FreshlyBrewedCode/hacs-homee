@@ -3,6 +3,13 @@
 # General
 DOMAIN = "homee"
 
+# Cubes
+BRAIN_CUBE = "Brain Cube"
+ZWAVE_CUBE = "Z-Wave Cube"
+ZIGBEE_CUBE = "Zigbee Cube"
+ENOCEAN_CUBE = "EnOcean Cube"
+
+
 # Services
 SERVICE_SET_VALUE = "set_value"
 
