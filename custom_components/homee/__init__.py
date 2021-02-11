@@ -21,7 +21,9 @@ from .const import (
     CONF_ADD_HOME_DATA,
     CONF_INITIAL_OPTIONS,
     DOMAIN,
+    NodeProfileNames,
     SERVICE_SET_VALUE,
+    UNKNOWN_MODEL,
 )
 
 _LOGGER = logging.getLogger(DOMAIN)
@@ -177,12 +179,12 @@ class HomeeNodeHelper:
 class HomeeNodeEntity:
     def __init__(self, node: HomeeNode, entity: Entity, entry: ConfigEntry) -> None:
         """Initialize the wrapper using a HomeeNode and target entity."""
-        self._node = node
+        self._node: HomeeNode = node
         self._entity = entity
         self._clear_node_listener = None
         self._unique_id = node.id
         self._entry = entry
-
+        self._homee: Homee = None
         self._homee_data = {
             "id": node.id,
             "name": node.name,
@@ -193,6 +195,7 @@ class HomeeNodeEntity:
     async def async_added_to_hass(self) -> None:
         """Add the homee binary sensor device to home assistant."""
         self.register_listener()
+        self._homee = self._entity.hass.data[DOMAIN][self._entry.entry_id]
 
     async def async_will_remove_from_hass(self):
         """Cleanup the entity."""
@@ -212,6 +215,26 @@ class HomeeNodeEntity:
     def name(self):
         """Return the display name of this entity."""
         return self._node.name
+
+    @property
+    def device_info(self):
+        """Return the info about the associated homee device."""
+
+        # entity.hass is only defined after the entity has been added
+        # however, device_info is called before async_added_to_hass
+        self._homee = self._entity.hass.data[DOMAIN][self._entry.entry_id]
+
+        info = {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self._homee.settings.uid, self.unique_id)
+            },
+            "name": self._node.name,
+            "model": NodeProfileNames.get(self._node.profile, UNKNOWN_MODEL),
+            "via_device": (DOMAIN, self._homee.settings.uid),
+        }
+
+        return info
 
     @property
     def raw_data(self):
