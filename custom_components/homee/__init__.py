@@ -25,6 +25,7 @@ from .const import (
     SERVICE_SET_VALUE,
     UNKNOWN_MODEL,
 )
+from .helpers import has_attribute
 
 _LOGGER = logging.getLogger(DOMAIN)
 
@@ -280,7 +281,7 @@ class HomeeNodeEntity:
 
     def has_attribute(self, attributeType):
         """Check if an attribute of the given type exists."""
-        return attributeType in self._node._attribute_map
+        return has_attribute(self._node, attributeType)
 
     async def async_set_value(self, attribute_type: int, value: float):
         """Set an attribute value on the homee node."""

@@ -30,3 +30,20 @@ def get_imported_nodes(
                 nodes.append(n)
 
     return nodes
+def has_attribute(node: HomeeNode, attributeType: int, readonly: bool = None):
+    """Check if an attribute of the given type exists."""
+    exists = attributeType in node._attribute_map
+
+    if exists and readonly is not None:
+        return is_readonly(node, attributeType) == readonly
+
+    return exists
+
+
+def is_readonly(node: HomeeNode, attributeType: int) -> bool:
+    """Check if an attribute of the given type is readonly. Returns False if the attribute does not exist on the node."""
+    attr = node.get_attribute_by_type(attributeType)
+    if attr is not None:
+        return attr.editable
+
+    return False
