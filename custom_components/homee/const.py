@@ -28,6 +28,9 @@ CONF_GROUPS = "groups"
 CONF_WINDOW_GROUPS = "window_groups"
 CONF_DOOR_GROUPS = "door_groups"
 
+# Components
+LIGHT_COMPONENT = "light"
+
 # Other
 UNKNOWN_MANUFACTURER = "-"
 UNKNOWN_MODEL = "-"

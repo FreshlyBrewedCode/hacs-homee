@@ -36,6 +36,8 @@ class HassHomee(Homee):
 
         _LOGGER.info("Setting up HassHomee...")
 
+        # Import providers
+        from .providers import HomeeLightProvider
 
         self.registry: HomeeEntityRegistry = HomeeEntityRegistry()
 

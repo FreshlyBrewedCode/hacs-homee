@@ -23,7 +23,7 @@ from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeNode
 
 from . import HomeeNodeEntity, helpers
-from .const import HOMEE_LIGHT_MAX_MIRED, HOMEE_LIGHT_MIN_MIRED
+from .const import HOMEE_LIGHT_MAX_MIRED, HOMEE_LIGHT_MIN_MIRED, LIGHT_COMPONENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,13 +55,20 @@ def decimal_to_rgb_list(color):
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add the homee platform for the light integration."""
 
-    devices = []
-    for node in helpers.get_imported_nodes(hass, config_entry):
-        if not is_light_node(node):
-            continue
-        devices.append(HomeeLight(node, config_entry))
-    if devices:
-        async_add_devices(devices)
+    # devices = []
+    # for node in helpers.get_imported_nodes(hass, config_entry):
+    #     if not is_light_node(node):
+    #         continue
+    #     devices.append(HomeeLight(node, config_entry))
+    # if devices:
+    #     async_add_devices(devices)
+
+    entities = []
+    for entry in helpers.get_registered_entries(LIGHT_COMPONENT, hass, config_entry):
+        entities.append(HomeeLight(entry.node, config_entry))
+
+    if entities:
+        async_add_devices(entities)
 
 
 async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
