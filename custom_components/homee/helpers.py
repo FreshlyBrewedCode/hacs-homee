@@ -35,6 +35,15 @@ def get_imported_nodes(
                 nodes.append(n)
 
     return nodes
+
+
+def get_registered_entries(
+    component: str, hass: HomeAssistant, config_entry: ConfigEntry
+) -> list:
+    homee: HassHomee = get_homee(hass, config_entry)
+    return homee.registry.get_component_entries(component)
+
+
 def has_attribute(node: HomeeNode, attributeType: int, readonly: bool = None):
     """Check if an attribute of the given type exists."""
     exists = attributeType in node._attribute_map
