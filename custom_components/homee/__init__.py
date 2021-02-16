@@ -21,13 +21,14 @@ from .const import (
     CONF_ADD_HOME_DATA,
     CONF_INITIAL_OPTIONS,
     DOMAIN,
-    NodeProfileNames,
     SERVICE_SET_VALUE,
     UNKNOWN_MODEL,
+    NodeProfileNames,
 )
 from .helpers import has_attribute
+from .hass_homee import HassHomee
 
-_LOGGER = logging.getLogger(DOMAIN)
+_LOGGER = logging.getLogger(__name__)
 
 # TODO
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
@@ -44,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up homee from a config entry."""
     # Create the Homee api object using host, user and password from the config
-    homee = Homee(
+    homee = HassHomee(
         entry.data[CONF_HOST],
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
@@ -185,7 +186,7 @@ class HomeeNodeEntity:
         self._clear_node_listener = None
         self._unique_id = node.id
         self._entry = entry
-        self._homee: Homee = None
+        self._homee: HassHomee = None
         self._homee_data = {
             "id": node.id,
             "name": node.name,

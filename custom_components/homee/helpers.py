@@ -5,14 +5,19 @@ from homeassistant.core import HomeAssistant
 from pymee import Homee
 from pymee.model import HomeeNode
 
+from .hass_homee import HassHomee
 from .const import CONF_GROUPS, DOMAIN
+
+
+def get_homee(hass: HomeAssistant, config_entry: ConfigEntry) -> HassHomee:
+    return hass.data[DOMAIN][config_entry.entry_id]
 
 
 def get_imported_nodes(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> List[HomeeNode]:
     """Get a list of nodes that should be imported."""
-    homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
+    homee: HassHomee = get_homee(hass, config_entry)
     all_groups = [str(g.id) for g in homee.groups]
 
     # Resolve the configured group ids to actual groups
