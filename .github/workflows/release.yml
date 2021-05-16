@@ -46,6 +46,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 12
+      - run: npm install @semantic-release/exec -D
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
