@@ -137,12 +137,12 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the zerconf discovery."""
 
         # Get the homee id from the discovery info
-        self.homee_id = discovery_info.get(zeroconf.ATTR_NAME)
+        self.homee_id = discovery_info["hostname"]
         # homee-<HOMEE ID>._sftp-ssh._tcp.local.
         self.homee_id = self.homee_id.split("-")[1].split(".")[0]
 
         # Get the host (ip address) from the discovery info
-        self.homee_host = discovery_info.get(zeroconf.ATTR_HOST)
+        self.homee_host = discovery_info["host"]
 
         # Update the title of the discovered device
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
