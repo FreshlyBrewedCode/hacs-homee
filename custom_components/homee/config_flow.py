@@ -133,7 +133,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_zeroconf(self, discovery_info=None):
+    async def async_step_zeroconf(self, discovery_info):
         """Handle the zerconf discovery."""
 
         # Get the homee id from the discovery info
