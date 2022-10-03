@@ -79,8 +79,11 @@ async def validate_and_connect(hass: core.HomeAssistant, data) -> Homee:
         raise CannotConnect from exc
 
     hass.loop.create_task(homee.run())
+    _LOGGER.info("homee task created")
     await homee.wait_until_connected()
+    _LOGGER.info("homee connected")
     homee.disconnect()
+    _LOGGER.info("homee disconnecting")
     await homee.wait_until_disconnected()
     _LOGGER.info("homee config successfully tested")
     # Return homee instance
