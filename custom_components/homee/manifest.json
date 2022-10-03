@@ -3,20 +3,14 @@
     "name": "homee",
     "config_flow": true,
     "iot_class": "local_push",
-    "documentation": "https://github.com/FreshlyBrewedCode/hacs-homee",
-    "issue_tracker": "https://github.com/FreshlyBrewedCode/hacs-homee/issues",
+    "documentation": "https://github.com/Stklingner/hacs-homee",
+    "issue_tracker": "https://github.com/Stklingner/hacs-homee/issues",
     "requirements": [
         "websocket_client==0.57.0",
         "pymee==1.5.4",
         "websockets==8.1"
     ],
     "ssdp": [],
-    "zeroconf": [
-        {
-            "type": "_sftp-ssh._tcp.local.",
-            "name": "homee*"
-        }
-    ],
     "homekit": {},
     "dependencies": [],
     "codeowners": [

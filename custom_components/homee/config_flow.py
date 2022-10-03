@@ -3,7 +3,6 @@ import asyncio
 import logging
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
@@ -131,62 +130,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=DATA_SCHEMA,
             errors=errors,
-        )
-
-    async def async_step_zeroconf(self, discovery_info):
-        """Handle the zerconf discovery."""
-
-        # Get the homee id from the discovery info
-        self.homee_id = discovery_info["hostname"]
-        # homee-<HOMEE ID>._sftp-ssh._tcp.local.
-        self.homee_id = self.homee_id.split("-")[1].split(".")[0]
-
-        # Get the host (ip address) from the discovery info
-        self.homee_host = discovery_info["host"]
-
-        # Update the title of the discovered device
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context.update(
-            {"title_placeholders": {"host": self.homee_host, "name": self.homee_id}}
-        )
-
-        await self.async_set_unique_id(self.homee_id)
-        self._abort_if_unique_id_configured()
-
-        return await self.async_step_zeroconf_confirm()
-
-    async def async_step_zeroconf_confirm(self, user_input=None):
-        """Handle the zeroconf confirm step."""
-        errors = {}
-        if user_input is not None:
-
-            try:
-                self.homee = await validate_and_connect(self.hass, user_input)
-                await self.async_set_unique_id(self.homee.settings.uid)
-                self._abort_if_unique_id_configured()
-
-                return await self.async_step_config()
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except AbortFlow:
-                return self.async_abort(reason="already_configured")
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-        schema = DATA_SCHEMA.extend(
-            {
-                vol.Required(CONF_HOST, default=self.homee_host): str,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            data_schema=schema,
-            errors=errors,
-            description_placeholders={"id": self.homee_id, "host": self.homee_host},
         )
 
     async def async_step_config(self, user_input=None):
