@@ -6,9 +6,8 @@
     "documentation": "https://github.com/Stklingner/hacs-homee",
     "issue_tracker": "https://github.com/Stklingner/hacs-homee/issues",
     "requirements": [
-        "websocket_client==0.57.0",
         "pymee==1.5.4",
-        "websockets==8.1"
+        "websockets==10.3"
     ],
     "ssdp": [],
     "homekit": {},
