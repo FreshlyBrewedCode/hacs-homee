@@ -79,7 +79,7 @@ async def validate_and_connect(hass: core.HomeAssistant, data) -> Homee:
 
     hass.async_create_task(homee.run())
     await homee.wait_until_connected()
-    hass.async_create_task(homee.disconnect())
+    homee.disconnect()
     await homee.wait_until_disconnected()
 
     # Return homee instance

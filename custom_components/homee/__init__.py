@@ -40,8 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     homee = Homee(
         entry.data[CONF_HOST],
         entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        loop=hass.loop,
+        entry.data[CONF_PASSWORD]
     )
     hass.data[DOMAIN][entry.entry_id] = homee
 
