@@ -72,6 +72,7 @@ async def validate_and_connect(hass: core.HomeAssistant, data) -> Homee:
 
     try:
         await homee.get_access_token()
+        _LOGGER.info("got access token for homee")
     except HomeeAuthenticationFailedException as exc:
         raise InvalidAuth from exc
     except asyncio.TimeoutError as exc:
@@ -81,7 +82,7 @@ async def validate_and_connect(hass: core.HomeAssistant, data) -> Homee:
     await homee.wait_until_connected()
     homee.disconnect()
     await homee.wait_until_disconnected()
-
+    _LOGGER.info("homee config successfully tested")
     # Return homee instance
     return homee
 
@@ -114,7 +115,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.homee = await validate_and_connect(self.hass, user_input)
                 await self.async_set_unique_id(self.homee.settings.uid)
                 self._abort_if_unique_id_configured()
-
+                _LOGGER.info("created new homee entry with ID {}".format(self.homee.settings.uid))
                 return await self.async_step_config()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
