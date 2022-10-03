@@ -78,7 +78,7 @@ async def validate_and_connect(hass: core.HomeAssistant, data) -> Homee:
     except asyncio.TimeoutError as exc:
         raise CannotConnect from exc
 
-    hass.async_create_task(homee.run())
+    hass.loop.create_task(homee.run())
     await homee.wait_until_connected()
     homee.disconnect()
     await homee.wait_until_disconnected()
