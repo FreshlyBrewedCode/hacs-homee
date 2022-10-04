@@ -79,7 +79,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return the cover's position"""
-        return 100 - self.attribute(AttributeType.POSITION)
+        return self.attribute(AttributeType.POSITION)
 
     @property
     def is_opening(self):
@@ -110,7 +110,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        position = 100 - cast(int, kwargs[ATTR_POSITION])
+        position = cast(int, kwargs[ATTR_POSITION])
         await self.async_set_value(
             AttributeType.POSITION, position
         )
