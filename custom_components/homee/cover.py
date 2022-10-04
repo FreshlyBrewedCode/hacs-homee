@@ -79,17 +79,17 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return the cover's position"""
-        return self.attribute(AttributeType.POSITION)
+        return 100 - self.attribute(AttributeType.POSITION)
 
     @property
     def is_opening(self):
         """opening status of the cover."""
-        return True if self.attribute(AttributeType.UP_DOWN) == 2 else False
+        return True if self.attribute(AttributeType.UP_DOWN) == 3 else False
 
     @property
     def is_closing(self):
         """Return the closing status of the cover."""
-        return True if self.attribute(AttributeType.UP_DOWN) == 3 else False
+        return True if self.attribute(AttributeType.UP_DOWN) == 4 else False
 
     @property
     def is_closed(self):
@@ -110,7 +110,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        position = cast(int, kwargs[ATTR_POSITION])
+        position = 100 - cast(int, kwargs[ATTR_POSITION])
         await self.async_set_value(
             AttributeType.POSITION, position
         )
@@ -118,5 +118,5 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         await self.async_set_value(
-            AttributeType.UP_DOWN, 4
+            AttributeType.UP_DOWN, 2
         )
