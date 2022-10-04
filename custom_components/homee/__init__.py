@@ -70,7 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=homee.deviceId,
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.mac)},
+        # TODO: figure out how to derive the MAC address - will need to update pymee?
+        # connections={(dr.CONNECTION_NETWORK_MAC, entry.mac)},
         identifiers={(DOMAIN, homee.deviceId)},
         manufacturer="homee",
         name=homee.device,
