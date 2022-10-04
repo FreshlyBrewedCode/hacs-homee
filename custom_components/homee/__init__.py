@@ -198,7 +198,7 @@ class HomeeNodeEntity:
         return {
             "identifiers": {
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self._unique_id())
+                (DOMAIN, self._unique_id)
             },
             "name": self.name,
             "default_manufacturer": "unknown",
