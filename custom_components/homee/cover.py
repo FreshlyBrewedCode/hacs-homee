@@ -78,34 +78,34 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     @property
     def current_cover_position(self):
-        """Return the brightness of the light."""
-        return self.attribute(AttributeType.POSITION)
+        """Return the cover's position"""
+        return 100 - self.attribute(AttributeType.POSITION)
 
     @property
     def is_opening(self):
-        """Return the brightness of the light."""
-        return True if self.attribute(AttributeType.UP_DOWN) == 3.0 else False
+        """opening status of the cover."""
+        return True if self.attribute(AttributeType.UP_DOWN) == 3 else False
 
     @property
     def is_closing(self):
-        """Return the brightness of the light."""
-        return True if self.attribute(AttributeType.UP_DOWN) == 4.0 else False
+        """Return the closing status of the cover."""
+        return True if self.attribute(AttributeType.UP_DOWN) == 4 else False
 
     @property
     def is_closed(self):
-        """Return the brightness of the light."""
-        return True if self.attribute(AttributeType.POSITION) == 1.0 else False
+        """Return the state of the cover."""
+        return True if self.attribute(AttributeType.POSITION) == 1 else False
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
         await self.async_set_value(
-            AttributeType.UP_DOWN, 0
+            AttributeType.UP_DOWN, 3
         )
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         await self.async_set_value(
-            AttributeType.UP_DOWN, 1
+            AttributeType.UP_DOWN, 4
         )
 
     async def async_set_cover_position(self, **kwargs):
@@ -118,5 +118,5 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         await self.async_set_value(
-            AttributeType.UP_DOWN, 3
+            AttributeType.UP_DOWN, 2
         )
