@@ -5,9 +5,11 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from pymee import Homee
 from pymee.model import HomeeAttribute, HomeeNode
+from pymee.const import AttributeType, NodeProfile
 import voluptuous as vol
 
 from .const import (
@@ -25,7 +27,7 @@ _LOGGER = logging.getLogger(DOMAIN)
 # TODO
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["light", "climate", "binary_sensor", "switch"]
+PLATFORMS = ["light", "climate", "binary_sensor", "switch", "cover", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -40,8 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     homee = Homee(
         entry.data[CONF_HOST],
         entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        loop=hass.loop,
+        entry.data[CONF_PASSWORD]
     )
     hass.data[DOMAIN][entry.entry_id] = homee
 
@@ -64,6 +65,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(homee.set_value(node, attribute, value))
 
     hass.services.async_register(DOMAIN, SERVICE_SET_VALUE, handle_set_value)
+
+    # create device register entry
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        # TODO: figure out how to derive the MAC address - will need to update pymee?
+        # connections={(dr.CONNECTION_NETWORK_MAC, entry.mac)},
+        identifiers={(DOMAIN, homee.deviceId)},
+        manufacturer="homee",
+        name=homee.deviceId,
+        model="TBD",
+        sw_version="TBD",
+        hw_version="TBD",
+    )
 
     # Forward entry setup to the platforms
     for component in PLATFORMS:
@@ -177,6 +192,20 @@ class HomeeNodeEntity:
     async def async_will_remove_from_hass(self):
         """Cleanup the entity."""
         self.clear_listener()
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self._unique_id)
+            },
+            "name": self.name,
+            "default_manufacturer": "unknown",
+            "default_model": "unknown",
+            "sw_version": self.attribute(AttributeType.SOFTWARE_REVISION),
+            "via_device": (DOMAIN, self._entry.entry_id),
+        }
 
     @property
     def should_poll(self) -> bool:
