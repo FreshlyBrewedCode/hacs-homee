@@ -18,11 +18,13 @@ _Component to integrate with [homee][homee]._
 **This component will set up the following platforms.**
 
 | Platform        | Description                                                                                                                       |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+|-----------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | `binary_sensor` | Integrate homee devices that provide binary state information like `on`/`off` or `open`/`close`.                                  |
 | `climate`       | Integrate homee devices that provide temperature and can set a target temperature.                                                |
+| `cover`         | Integrate homee motor node classes for shutters, blinds and garage doors                                                          |
 | `light`         | Integrate lights from homee.                                                                                                      |
 | `switch`        | Integrate homee devices that can be turned `on`/`off` and can optionally provide information about the current power consumption. |
+| `sensor`        | Integrate power and energy sensors                                                                                                |
 
 ![homee][homee_logo]
 
@@ -50,8 +52,8 @@ _Component to integrate with [homee][homee]._
 
 ## Configuration
 > :information_source: Because of a bug (#4) you should only configure **one** homee in Home Assistant.
-
-The integration will attempt to discover homee cubes in your network. Discovered cubes should show up in the "Configuration" -> "Integrations" section along with the associated homee id and host ip address.
+> :information_source: Currently zeroconf has been disabled due to a change in how the initialization works.
+~~The integration will attempt to discover homee cubes in your network. Discovered cubes should show up in the "Configuration" -> "Integrations" section along with the associated homee id and host ip address.~~
 
 1. In the HA UI go to "Configuration" -> "Integrations", click "Configure" on a discovered homee or click "+", search for "homee", and select the "homee" integration from the list.
 2. In the dialog enter the username and password of a homee account that can access your cube, as well as the host (ip address of the homee cube) if you are not configuring a discovered cube. Click submit.
