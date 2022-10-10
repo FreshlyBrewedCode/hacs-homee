@@ -12,8 +12,6 @@
 
 _Component to integrate with [homee][homee]._
 
-This is Sam's Test Version!!
-
 | :warning: This is a custom integration that is early in development and has so far only been tested in very specific environments and with a limited amount and variety of devices. Please backup your homee and Home Assistant instances before proceeding. |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 

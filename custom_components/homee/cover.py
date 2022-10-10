@@ -56,10 +56,10 @@ def is_cover_node(node: HomeeNode):
     """Determine if a node is controllable as a homee cover based on its profile and attributes."""
     return node.profile in [
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH,
-        NodeProfile.OPEN_CLOSE_WITH_TEMPERATURE_AND_BRIGHTNESS_SENSOR,
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH_WITHOUT_SLAT_POSITION,
         NodeProfile.GARAGE_DOOR_OPERATOR,
-        NodeProfile.GARAGE_DOOR_IMPULSE_OPERATOR
+        NodeProfile.GARAGE_DOOR_IMPULSE_OPERATOR,
+        NodeProfile.SHUTTER_POSITION_SWITCH
     ]
 
 
@@ -70,6 +70,8 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         """Initialize a homee cover entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
         self._supported_features = get_cover_features(self)
+
+        self._unique_id = f"{self._node.id}-cover"
 
     @property
     def supported_features(self):
@@ -99,13 +101,13 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
         await self.async_set_value(
-            AttributeType.UP_DOWN, 3
+            AttributeType.UP_DOWN, 0
         )
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         await self.async_set_value(
-            AttributeType.UP_DOWN, 4
+            AttributeType.UP_DOWN, 1
         )
 
     async def async_set_cover_position(self, **kwargs):

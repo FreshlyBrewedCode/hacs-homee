@@ -5,11 +5,14 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from pymee import Homee
 from pymee.model import HomeeAttribute, HomeeNode
+from pymee.const import AttributeType, NodeProfile
 import voluptuous as vol
 
+from .helpers import get_attribute_for_enum
 from .const import (
     ATTR_ATTRIBUTE,
     ATTR_NODE,
@@ -42,7 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD]
     )
-    hass.data[DOMAIN][entry.entry_id] = homee
 
     # Migrate initial options
     if entry.options is None or entry.options == {}:
@@ -52,6 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Start the homee websocket connection as a new task and wait until we are connected
     hass.loop.create_task(homee.run())
     await homee.wait_until_connected()
+
+    hass.data[DOMAIN][entry.entry_id] = homee
 
     # Register the set_value service that can be used for debugging and custom automations
     def handle_set_value(call: ServiceCall):
@@ -63,6 +67,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(homee.set_value(node, attribute, value))
 
     hass.services.async_register(DOMAIN, SERVICE_SET_VALUE, handle_set_value)
+
+    # create device register entry
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        # TODO: figure out how to derive the MAC address - will need to update pymee?
+        # connections={(dr.CONNECTION_NETWORK_MAC, entry.mac)},
+        identifiers={(DOMAIN, homee.deviceId)},
+        manufacturer="homee",
+        name=homee.settings.homee_name,
+        model="homee",
+        sw_version=homee.settings.version,
+        hw_version="TBD"
+    )
 
     # Forward entry setup to the platforms
     for component in PLATFORMS:
@@ -97,62 +115,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     return unload_ok
 
-
-class HomeeNodeHelper:
-    """Provides a wrapper around HomeeNode to simply usage in homee entities."""
-
-    def __init__(self, node: HomeeNode, entity: Entity) -> None:
-        """Initialize the wrapper using a HomeeNode and target entity."""
-        self._node = node
-        self._entity = entity
-        self._clear_node_listener = None
-
-    def register_listener(self):
-        """Register the on_changed listener on the node."""
-        self._clear_node_listener = self._node.add_on_changed_listener(
-            self._on_node_updated
-        )
-
-    def clear_listener(self):
-        """Clear the on_changed listener on the node."""
-        if self._clear_node_listener is not None:
-            self._clear_node_listener()
-
-    def attribute(self, attributeType):
-        """Try to get the current value of the attribute of the given type."""
-        try:
-            return self._node.get_attribute_by_type(attributeType).current_value
-        except Exception:
-            raise AttributeNotFoundException(attributeType)
-
-    def get_attribute(self, attributeType):
-        """Get the attribute object of the given type."""
-        return self._node.get_attribute_by_type(attributeType)
-
-    def has_attribute(self, attributeType):
-        """Check if an attribute of the given type exists."""
-        return attributeType in self._node._attribute_map
-
-    async def async_set_value(self, attribute_type: int, value: float):
-        """Set an attribute value on the homee node."""
-        await self.async_set_value_by_id(self.get_attribute(attribute_type).id, value)
-
-    async def async_set_value_by_id(self, attribute_id: int, value: float):
-        """Set an attribute value on the homee node."""
-        await self._entity.hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_VALUE,
-            {
-                ATTR_NODE: self._node.id,
-                ATTR_ATTRIBUTE: attribute_id,
-                ATTR_VALUE: value,
-            },
-        )
-
-    def _on_node_updated(self, node: HomeeNode, attribute: HomeeAttribute):
-        self._entity.schedule_update_ha_state()
-
-
 class HomeeNodeEntity:
     def __init__(self, node: HomeeNode, entity: Entity, entry: ConfigEntry) -> None:
         """Initialize the wrapper using a HomeeNode and target entity."""
@@ -176,6 +138,20 @@ class HomeeNodeEntity:
     async def async_will_remove_from_hass(self):
         """Cleanup the entity."""
         self.clear_listener()
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self._node.id)
+            },
+            "name": self._node.name,
+            "default_manufacturer": "unknown",
+            "default_model": get_attribute_for_enum(NodeProfile, self._homee_data["profile"]),
+            "sw_version": self.attribute(AttributeType.SOFTWARE_REVISION),
+            "via_device": (DOMAIN, self._entry.entry_id)
+        }
 
     @property
     def should_poll(self) -> bool:
