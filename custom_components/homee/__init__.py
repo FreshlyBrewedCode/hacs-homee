@@ -166,7 +166,7 @@ class HomeeNodeEntity:
     @property
     def name(self):
         """Return the display name of this entity."""
-        return self._node.name
+        return None
 
     @property
     def raw_data(self):

@@ -93,10 +93,8 @@ class HomeeSwitch(HomeeNodeEntity, SwitchEntity):
         if self._switch_index <= 0:
             return None
 
-        if self._switch_index > 0:
-            return f"{self._node.name} {self._switch_index + 1}"
-
-        return self._node.name
+        elif self._switch_index > 0:
+            return f"switch {self._switch_index + 1}"
 
     @property
     def is_on(self) -> bool:
