@@ -56,20 +56,29 @@ def is_cover_node(node: HomeeNode):
     """Determine if a node is controllable as a homee cover based on its profile and attributes."""
     return node.profile in [
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH,
-        NodeProfile.OPEN_CLOSE_WITH_TEMPERATURE_AND_BRIGHTNESS_SENSOR,
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH_WITHOUT_SLAT_POSITION,
         NodeProfile.GARAGE_DOOR_OPERATOR,
-        NodeProfile.GARAGE_DOOR_IMPULSE_OPERATOR
+        NodeProfile.GARAGE_DOOR_IMPULSE_OPERATOR,
+        NodeProfile.SHUTTER_POSITION_SWITCH
     ]
 
 
 class HomeeCover(HomeeNodeEntity, CoverEntity):
-    """Representation of a homee climate device."""
+    """Representation of a homee cover device."""
+    _attr_has_entity_name = True
+
 
     def __init__(self, node: HomeeNode, entry: ConfigEntry):
         """Initialize a homee cover entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
         self._supported_features = get_cover_features(self)
+
+        self._unique_id = f"{self._node.id}-cover"
+
+    @property
+    def name(self):
+        """Return the display name of this cover."""
+        return self._node.name
 
     @property
     def supported_features(self):

@@ -66,6 +66,8 @@ async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
 
 class HomeeBinarySensor(HomeeNodeEntity, BinarySensorEntity):
     """Representation of a homee binary sensor device."""
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, node: HomeeNode, entry: ConfigEntry):
         """Initialize a homee binary sensor entity."""
@@ -75,6 +77,7 @@ class HomeeBinarySensor(HomeeNodeEntity, BinarySensorEntity):
         self._state_attr = AttributeType.OPEN_CLOSE
 
         self._configure_device_class()
+        self._unique_id = f"{self._node.id}-binary_sensor-{self._state_attr}"
 
     def _configure_device_class(self):
         """Configure the device class of the sensor"""

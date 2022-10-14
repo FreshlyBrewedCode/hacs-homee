@@ -65,6 +65,8 @@ def is_climate_node(node: HomeeNode):
 
 class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     """Representation of a homee climate device."""
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, node: HomeeNode, entry: ConfigEntry):
         """Initialize a homee climate entity."""
