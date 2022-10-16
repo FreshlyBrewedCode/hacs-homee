@@ -67,7 +67,6 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     """Representation of a homee cover device."""
     _attr_has_entity_name = True
 
-
     def __init__(self, node: HomeeNode, entry: ConfigEntry):
         """Initialize a homee cover entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
@@ -78,7 +77,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     @property
     def name(self):
         """Return the display name of this cover."""
-        return self._node.name
+        return None
 
     @property
     def supported_features(self):

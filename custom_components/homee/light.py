@@ -157,7 +157,7 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
 
     @property
     def name(self):
-        if self._index == 0:
+        if self._light_index == 0:
             return None
         else:
             return f"light {self._light_index + 1}" 
