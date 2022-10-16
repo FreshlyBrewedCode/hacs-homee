@@ -20,6 +20,8 @@ _Component to integrate with [homee][homee]._
 | Platform        | Description                                                                                                                       |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `binary_sensor` | Integrate homee devices that provide binary state information like `on`/`off` or `open`/`close`.                                  |
+| `sensor`        | Integrate homee devices that provide readings - currently power and energy are supported                                          |
+| `cover`         | Integrate homee devices that provide motor and position functions such as blinds and shutter actuators                            |
 | `climate`       | Integrate homee devices that provide temperature and can set a target temperature.                                                |
 | `light`         | Integrate lights from homee.                                                                                                      |
 | `switch`        | Integrate homee devices that can be turned `on`/`off` and can optionally provide information about the current power consumption. |
