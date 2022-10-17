@@ -141,6 +141,10 @@ class HomeeNodeEntity:
 
     @property
     def device_info(self):
+        try:
+            sw_version = self.attribute(AttributeType.SOFTWARE_REVISION)
+        except:
+            sw_version = "undefined" 
         return {
             "identifiers": {
                 # Serial numbers are unique identifiers within a specific domain
@@ -149,7 +153,7 @@ class HomeeNodeEntity:
             "name": self._node.name,
             "default_manufacturer": "unknown",
             "default_model": get_attribute_for_enum(NodeProfile, self._homee_data["profile"]),
-            "sw_version": self.attribute(AttributeType.SOFTWARE_REVISION),
+            "sw_version": sw_version,
             "via_device": (DOMAIN, self._entry.entry_id)
         }
 
