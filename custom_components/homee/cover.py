@@ -102,7 +102,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return the state of the cover."""
-        return True if self.attribute(AttributeType.POSITION) == 1 else False
+        return True if self.attribute(AttributeType.POSITION) == 100 else False
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
