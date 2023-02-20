@@ -28,7 +28,14 @@ HOMEE_SWITCH_PROFILES = [
     NodeProfile.ON_OFF_SWITCH,
     NodeProfile.DOUBLE_ON_OFF_SWITCH,
     NodeProfile.ON_OFF_SWITCH_WITH_BINARY_INPUT,
-    NodeProfile.DOUBLE_METERING_SWITCH
+    NodeProfile.DOUBLE_METERING_SWITCH,
+    NodeProfile.GARAGE_DOOR_IMPULSE_OPERATOR,
+    NodeProfile.IMPULSE_RELAY,
+]
+
+HOMEE_SWITCH_ATTRIBUTES = [
+    AttributeType.ON_OFF,
+    AttributeType.IMPULSE,
 ]
 
 
@@ -42,9 +49,13 @@ def get_device_class(node: HomeeNode) -> int:
 
 def is_switch_node(node: HomeeNode):
     """Determine if a node contains switches based on attributes."""
-    return AttributeType.ON_OFF in node._attribute_map and (
-        node.profile in HOMEE_PLUG_PROFILES or node.profile in HOMEE_SWITCH_PROFILES
-    )
+    for attribute in node.attributes:
+        if attribute.type in HOMEE_SWITCH_ATTRIBUTES:
+            return (
+                node.profile in HOMEE_PLUG_PROFILES
+                or node.profile in HOMEE_SWITCH_PROFILES
+            )
+    return False
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
@@ -56,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             continue
         switch_count = 0
         for attribute in node.attributes:
-            if attribute.type == AttributeType.ON_OFF and attribute.editable:
+            if attribute.type in HOMEE_SWITCH_ATTRIBUTES and attribute.editable:
                 devices.append(HomeeSwitch(node, config_entry, attribute, switch_count))
                 switch_count += 1
     if devices:
@@ -70,6 +81,7 @@ async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
 
 class HomeeSwitch(HomeeNodeEntity, SwitchEntity):
     """Representation of a homee switch."""
+
     _attr_has_entity_name = True
 
     def __init__(
@@ -116,7 +128,7 @@ class HomeeSwitch(HomeeNodeEntity, SwitchEntity):
             return self.attribute(AttributeType.CURRENT_ENERGY_USE)
         else:
             return None
-        
+
     @property
     def today_energy_kwh(self):
         """Return the total power usage in kWh."""
