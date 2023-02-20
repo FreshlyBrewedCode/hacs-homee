@@ -6,7 +6,7 @@
     "documentation": "https://github.com/FreshlyBrewedCode/hacs-homee",
     "issue_tracker": "https://github.com/FreshlyBrewedCode/hacs-homee/issues",
     "requirements": [
-        "pymee==1.5.4",
+        "pymee==1.6.0",
         "websockets==10.3"
     ],
     "ssdp": [],
