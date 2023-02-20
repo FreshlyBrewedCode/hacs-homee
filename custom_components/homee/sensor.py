@@ -6,7 +6,7 @@ import homeassistant
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
-    SensorStateClass
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from pymee.const import AttributeType
@@ -16,8 +16,12 @@ from . import HomeeNodeEntity, helpers
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_ATTRIBUTES = [AttributeType.CURRENT_ENERGY_USE,
-                    AttributeType.ACCUMULATED_ENERGY_USE]
+VALID_ATTRIBUTES = [
+    AttributeType.CURRENT_ENERGY_USE,
+    AttributeType.ACCUMULATED_ENERGY_USE,
+    AttributeType.POSITION,
+]
+
 
 def get_device_class(attribute: HomeeAttribute) -> int:
     """Determine the device class a homee node based on the node profile."""
@@ -28,6 +32,7 @@ def get_device_class(attribute: HomeeAttribute) -> int:
     else:
         return None
 
+
 def get_state_class(attribute: HomeeAttribute) -> int:
     """Determine the device class a homee node based on the node profile."""
     if attribute.type == AttributeType.CURRENT_ENERGY_USE:
@@ -36,6 +41,7 @@ def get_state_class(attribute: HomeeAttribute) -> int:
         return SensorStateClass.TOTAL_INCREASING
     else:
         return None
+
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add the homee platform for the sensor components."""
@@ -61,6 +67,7 @@ async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
 
 class HomeeSensor(HomeeNodeEntity, SensorEntity):
     """Representation of a homee sensor."""
+
     _attr_has_entity_name = True
 
     def __init__(
@@ -68,7 +75,7 @@ class HomeeSensor(HomeeNodeEntity, SensorEntity):
         node: HomeeNode,
         entry: ConfigEntry,
         measurement_attribute: HomeeAttribute = None,
-        sensor_index = 0,
+        sensor_index=0,
     ):
         """Initialize a homee sensor entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
