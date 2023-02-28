@@ -55,6 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.loop.create_task(homee.run())
     await homee.wait_until_connected()
 
+    # Log info about nodes, to facilitate recognition of unknown nodes.
+    for node in homee.nodes:
+        _LOGGER.info(
+            "Found node %s, with note %s and Attributes %s",
+            node.name,
+            node.note,
+            node.attributes_raw,
+        )
+
     hass.data[DOMAIN][entry.entry_id] = homee
 
     # Register the set_value service that can be used for debugging and custom automations
