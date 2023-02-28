@@ -83,7 +83,7 @@ logger:
 ```
 2. Restart Home Assistant.
 3. Go to "Settings->System->Logs" and show complete logs.
-4. Look for lines containing "INFO (MainThread) [homee]" and copy them
+4. Look for lines containing "INFO (MainThread) \[homee]" and copy them
 5. Open an issue describing the device and paste the logs in the corresponding section
 
 ## Contributions are welcome!
