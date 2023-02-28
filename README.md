@@ -71,6 +71,20 @@ The following table shows the available options that can be configured in the "I
 | `Groups that contain door sensors`                                           | empty      | Any `binary_sensor` that is in any of the selected groups will use the `door` device class. You should select a homee group that contains all of your door sensors.                                                                                                                                        |
 | `Add (debug) information about the homee node and attributes to each entity` | `False`    | Enabling this option will add the `homee_data` attribute to every entity created by this integration. The attribute contains information about the homee node (name, id, profile) and the attributes (id, type). This option can be useful for debugging or advanced automations when used with templates. |
 
+## Homee device not correctly working?
+As of now this integration has support for very few devices. If you have devices, that are not discovered or not working correctly, open an issue and do the following to provide a log:
+
+1. Add following lines to configuration.yaml to enable info logging for hacs-homee:
+```
+logger:
+  default: warn
+  logs:
+    custom_components.homee: info
+```
+2. Restart Home Assistant.
+3. Go to "Settings->System->Logs" and show complete logs.
+4. Look for lines containing "INFO (MainThread) [homee]" and copy them
+5. Open an issue describing the device and paste the logs in the corresponding section
 
 ## Contributions are welcome!
 
