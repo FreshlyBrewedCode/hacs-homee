@@ -1,6 +1,5 @@
 """The homee binary sensor platform."""
 
-from custom_components.homee.const import CONF_DOOR_GROUPS, CONF_WINDOW_GROUPS
 import logging
 
 import homeassistant
@@ -17,6 +16,7 @@ from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeNode
 
 from . import HomeeNodeEntity, helpers
+from .const import CONF_DOOR_GROUPS, CONF_WINDOW_GROUPS
 
 _LOGGER = logging.getLogger(__name__)
 
