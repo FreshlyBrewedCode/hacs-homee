@@ -1,7 +1,5 @@
 import inspect
 
-from typing import List
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from pymee import Homee
@@ -12,7 +10,7 @@ from .const import CONF_GROUPS, DOMAIN
 
 def get_imported_nodes(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> List[HomeeNode]:
+) -> list[HomeeNode]:
     """Get a list of nodes that should be imported."""
     homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
     all_groups = [str(g.id) for g in homee.groups]
@@ -25,7 +23,7 @@ def get_imported_nodes(
 
     # Add all nodes from the groups in a list
     # Make sure each node is only added once
-    nodes: List[HomeeNode] = []
+    nodes: list[HomeeNode] = []
     for g in groups:
         for n in g.nodes:
             if n not in nodes:
