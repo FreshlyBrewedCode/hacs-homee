@@ -9,7 +9,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverDeviceClass,
 )
-from typing import Any, cast
+from typing import cast
 from homeassistant.config_entries import ConfigEntry
 from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeNode
