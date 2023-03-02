@@ -89,13 +89,19 @@ class HomeeSensor(HomeeNodeEntity, SensorEntity):
     @property
     def name(self):
         """Return the display name of this entity."""
-        if self._measurement.name != "":
-            return f"{self._measurement.name}"
+        if self._measurement.name not in ["", "None"]:
+            name = f"{self._measurement.name}"
+        elif self._device_class:
+            name = f"{self._device_class}"
+        else:
+            for key, val in AttributeType.__dict__.items():
+                if val == self._measurement.type:
+                    name = f"{key}"
 
         if self._sensor_index > 0:
-            return f"{self._device_class} {self._sensor_index + 1}"
+            name = f"{name} {self._sensor_index + 1}"
 
-        return f"{self._device_class}"
+        return name
 
     @property
     def native_value(self):
