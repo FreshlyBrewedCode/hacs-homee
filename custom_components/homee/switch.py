@@ -115,7 +115,8 @@ class HomeeSwitch(HomeeNodeEntity, SwitchEntity):
 
         # special impulses should always be named descriptive
         if attribute_name.find("_IMPULSE") > -1:
-            return attribute_name[0, attribute_name.find("_IMPULSE")]
+            _LOGGER.info("find returned: %s", attribute_name.find("_IMPULSE"))
+            return attribute_name[0 : attribute_name.find("_IMPULSE")]
 
         if self._switch_index <= 0:
             return None
