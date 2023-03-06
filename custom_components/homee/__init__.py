@@ -151,10 +151,11 @@ class HomeeNodeEntity:
     @property
     def device_info(self):
         """Holds the available information about the device"""
-        try:
+        if self.has_attribute(AttributeType.SOFTWARE_REVISION):
             sw_version = self.attribute(AttributeType.SOFTWARE_REVISION)
-        except:
+        else:
             sw_version = "undefined"
+
         return {
             "identifiers": {
                 # Serial numbers are unique identifiers within a specific domain
