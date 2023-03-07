@@ -20,6 +20,7 @@ VALID_ATTRIBUTES = [
     AttributeType.CURRENT_ENERGY_USE,
     AttributeType.ACCUMULATED_ENERGY_USE,
     AttributeType.POSITION,
+    AttributeType.UP_DOWN,
 ]
 
 
