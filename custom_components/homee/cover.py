@@ -2,7 +2,7 @@
 
 import logging
 
-import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverEntityFeature,
@@ -46,7 +46,7 @@ def get_device_class(node: HomeeNode) -> int:
         return CoverDeviceClass.SHUTTER
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
     """Add the homee platform for the cover integration."""
     # homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -59,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(devices)
 
 
-async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return True
 
@@ -79,7 +79,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, node: HomeeNode, entry: ConfigEntry):
+    def __init__(self, node: HomeeNode, entry: ConfigEntry) -> None:
         """Initialize a homee cover entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
         self._supported_features = get_cover_features(node)

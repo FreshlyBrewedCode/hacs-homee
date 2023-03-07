@@ -2,14 +2,10 @@
 
 import logging
 
-import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_LOCK,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PLUG,
     BinarySensorEntity,
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from pymee.const import AttributeType, NodeProfile
@@ -23,16 +19,16 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_device_class(node: HomeeNodeEntity) -> int:
     """Determine the device class a homee node based on the available attributes."""
-    device_class = DEVICE_CLASS_OPENING
+    device_class = BinarySensorDeviceClass.OPENING
     state_attr = AttributeType.OPEN_CLOSE
 
     if node.has_attribute(AttributeType.ON_OFF):
         state_attr = AttributeType.ON_OFF
-        device_class = DEVICE_CLASS_PLUG
+        device_class = BinarySensorDeviceClass.PLUG
 
     if node.has_attribute(AttributeType.LOCK_STATE):
         state_attr = AttributeType.LOCK_STATE
-        device_class = DEVICE_CLASS_LOCK
+        device_class = BinarySensorDeviceClass.LOCK
 
     return (device_class, state_attr)
 
@@ -47,7 +43,7 @@ def is_binary_sensor_node(node: HomeeNode):
     ]
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
     """Add the homee platform for the binary sensor integration."""
 
     devices = []
@@ -59,21 +55,22 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(devices)
 
 
-async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return True
 
 
 class HomeeBinarySensor(HomeeNodeEntity, BinarySensorEntity):
     """Representation of a homee binary sensor device."""
+
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, node: HomeeNode, entry: ConfigEntry):
+    def __init__(self, node: HomeeNode, entry: ConfigEntry) -> None:
         """Initialize a homee binary sensor entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
 
-        self._device_class = DEVICE_CLASS_OPENING
+        self._device_class = BinarySensorDeviceClass.OPENING
         self._state_attr = AttributeType.OPEN_CLOSE
 
         self._configure_device_class()
@@ -90,12 +87,12 @@ class HomeeBinarySensor(HomeeNodeEntity, BinarySensorEntity):
             str(group.id) in self._entry.options.get(CONF_WINDOW_GROUPS, [])
             for group in self._node.groups
         ):
-            self._device_class = DEVICE_CLASS_WINDOW
+            self._device_class = BinarySensorDeviceClass.WINDOW
         elif any(
             str(group.id) in self._entry.options.get(CONF_DOOR_GROUPS, [])
             for group in self._node.groups
         ):
-            self._device_class = DEVICE_CLASS_DOOR
+            self._device_class = BinarySensorDeviceClass.DOOR
 
     @property
     def is_on(self):

@@ -2,7 +2,7 @@
 
 import logging
 
-import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
@@ -27,30 +27,32 @@ def get_device_class(attribute: HomeeAttribute) -> int:
     """Determine the device class a homee node based on the node profile."""
     if attribute.type == AttributeType.CURRENT_ENERGY_USE:
         return SensorDeviceClass.POWER
-    elif attribute.type == AttributeType.ACCUMULATED_ENERGY_USE:
+
+    if attribute.type == AttributeType.ACCUMULATED_ENERGY_USE:
         return SensorDeviceClass.ENERGY
-    else:
-        return None
+
+    return None
 
 
 def get_state_class(attribute: HomeeAttribute) -> int:
     """Determine the device class a homee node based on the node profile."""
     if attribute.type == AttributeType.CURRENT_ENERGY_USE:
         return SensorStateClass.MEASUREMENT
-    elif attribute.type == AttributeType.ACCUMULATED_ENERGY_USE:
+
+    if attribute.type == AttributeType.ACCUMULATED_ENERGY_USE:
         return SensorStateClass.TOTAL_INCREASING
-    else:
-        return None
+
+    return None
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
     """Add the homee platform for the sensor components."""
 
     devices = []
     for node in helpers.get_imported_nodes(hass, config_entry):
         sensor_type_counts = {}
         for attribute in node.attributes:
-            if attribute.type not in sensor_type_counts.keys():
+            if attribute.type not in sensor_type_counts:
                 sensor_type_counts[attribute.type] = 0
             if attribute.type in VALID_ATTRIBUTES:
                 sensor_index = sensor_type_counts[attribute.type]
@@ -60,7 +62,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(devices)
 
 
-async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return True
 
@@ -76,7 +78,7 @@ class HomeeSensor(HomeeNodeEntity, SensorEntity):
         entry: ConfigEntry,
         measurement_attribute: HomeeAttribute = None,
         sensor_index=0,
-    ):
+    ) -> None:
         """Initialize a homee sensor entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
         self._measurement = measurement_attribute

@@ -2,7 +2,7 @@
 
 import logging
 
-import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
@@ -50,8 +50,8 @@ def get_device_class(node: HomeeNode) -> int:
     """Determine the device class a homee node based on the node profile."""
     if node.profile in HOMEE_PLUG_PROFILES:
         return SwitchDeviceClass.OUTLET
-    else:
-        return SwitchDeviceClass.SWITCH
+
+    return SwitchDeviceClass.SWITCH
 
 
 def is_switch_node(node: HomeeNode):
@@ -65,7 +65,7 @@ def is_switch_node(node: HomeeNode):
     return False
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
     """Add the homee platform for the switch component."""
 
     devices = []
@@ -81,7 +81,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(devices)
 
 
-async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return True
 
@@ -97,7 +97,7 @@ class HomeeSwitch(HomeeNodeEntity, SwitchEntity):
         entry: ConfigEntry,
         on_off_attribute: HomeeAttribute = None,
         switch_index=-1,
-    ):
+    ) -> None:
         """Initialize a homee switch entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
         self._on_off = on_off_attribute
