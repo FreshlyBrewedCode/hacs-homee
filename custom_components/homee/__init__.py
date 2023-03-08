@@ -41,9 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up homee from a config entry."""
     # Create the Homee api object using host, user and password from the config
     homee = Homee(
-        entry.data[CONF_HOST],
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD]
+        entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
     )
 
     # Migrate initial options
@@ -58,10 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Log info about nodes, to facilitate recognition of unknown nodes.
     for node in homee.nodes:
         _LOGGER.info(
-            "Found node %s, with note %s and Attributes %s",
+            "Found node %s, with following Data: %s",
             node.name,
-            node.note,
-            node.attributes_raw,
+            node._data,
         )
 
     hass.data[DOMAIN][entry.entry_id] = homee
@@ -88,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name=homee.settings.homee_name,
         model="homee",
         sw_version=homee.settings.version,
-        hw_version="TBD"
+        hw_version="TBD",
     )
 
     # Forward entry setup to the platforms
@@ -124,7 +121,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     return unload_ok
 
+
 class HomeeNodeEntity:
+    """Representation of a Node in Homee."""
+
     def __init__(self, node: HomeeNode, entity: Entity, entry: ConfigEntry) -> None:
         """Initialize the wrapper using a HomeeNode and target entity."""
         self._node = node
@@ -150,10 +150,12 @@ class HomeeNodeEntity:
 
     @property
     def device_info(self):
-        try:
+        """Holds the available information about the device"""
+        if self.has_attribute(AttributeType.SOFTWARE_REVISION):
             sw_version = self.attribute(AttributeType.SOFTWARE_REVISION)
-        except:
-            sw_version = "undefined" 
+        else:
+            sw_version = "undefined"
+
         return {
             "identifiers": {
                 # Serial numbers are unique identifiers within a specific domain
@@ -161,9 +163,11 @@ class HomeeNodeEntity:
             },
             "name": self._node.name,
             "default_manufacturer": "unknown",
-            "default_model": get_attribute_for_enum(NodeProfile, self._homee_data["profile"]),
+            "default_model": get_attribute_for_enum(
+                NodeProfile, self._homee_data["profile"]
+            ),
             "sw_version": sw_version,
-            "via_device": (DOMAIN, self._entry.entry_id)
+            "via_device": (DOMAIN, self._entry.entry_id),
         }
 
     @property

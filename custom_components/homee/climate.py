@@ -2,16 +2,15 @@
 
 import logging
 
-import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.components.climate import (
+    HVACMode,
     ATTR_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    ClimateEntityFeature,
     ClimateEntity,
 )
-from homeassistant.components.climate.const import HVAC_MODE_HEAT
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import UnitOfTemperature
 from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeNode
 
@@ -19,7 +18,10 @@ from . import HomeeNodeEntity, helpers
 
 _LOGGER = logging.getLogger(__name__)
 
-HOMEE_UNIT_TO_HA_UNIT = {"°C": TEMP_CELSIUS, "°F": TEMP_FAHRENHEIT}
+HOMEE_UNIT_TO_HA_UNIT = {
+    "°C": UnitOfTemperature.CELSIUS,
+    "°F": UnitOfTemperature.FAHRENHEIT,
+}
 
 
 def get_climate_features(node: HomeeNodeEntity, default=0) -> int:
@@ -27,16 +29,16 @@ def get_climate_features(node: HomeeNodeEntity, default=0) -> int:
     features = default
 
     if node.has_attribute(AttributeType.TARGET_TEMPERATURE):
-        features |= SUPPORT_TARGET_TEMPERATURE
+        features |= ClimateEntityFeature.TARGET_TEMPERATURE
     if node.has_attribute(AttributeType.TARGET_TEMPERATURE_LOW) and node.has_attribute(
         AttributeType.TARGET_TEMPERATURE_HIGH
     ):
-        features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+        features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
     return features
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
     """Add the homee platform for the light integration."""
     # homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -49,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(devices)
 
 
-async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return True
 
@@ -65,10 +67,11 @@ def is_climate_node(node: HomeeNode):
 
 class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     """Representation of a homee climate device."""
+
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, node: HomeeNode, entry: ConfigEntry):
+    def __init__(self, node: HomeeNode, entry: ConfigEntry) -> None:
         """Initialize a homee climate entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
         self._supported_features = get_climate_features(self)
@@ -86,12 +89,12 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the available hvac operation modes."""
-        return [HVAC_MODE_HEAT]
+        return [HVACMode.HEAT]
 
     @property
     def hvac_mode(self):
         """Return the hvac operation mode."""
-        return HVAC_MODE_HEAT
+        return HVACMode.HEAT
 
     @property
     def current_temperature(self):

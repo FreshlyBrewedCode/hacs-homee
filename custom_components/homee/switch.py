@@ -2,10 +2,9 @@
 
 import logging
 
-import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.components.switch import (
-    DEVICE_CLASS_OUTLET,
-    DEVICE_CLASS_SWITCH,
+    SwitchDeviceClass,
     SwitchEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -29,22 +28,30 @@ HOMEE_SWITCH_PROFILES = [
     NodeProfile.DOUBLE_ON_OFF_SWITCH,
     NodeProfile.ON_OFF_SWITCH_WITH_BINARY_INPUT,
     NodeProfile.DOUBLE_METERING_SWITCH,
-    NodeProfile.GARAGE_DOOR_IMPULSE_OPERATOR,
     NodeProfile.IMPULSE_RELAY,
+    NodeProfile.GARAGE_DOOR_OPERATOR,
+    NodeProfile.GARAGE_DOOR_IMPULSE_OPERATOR,
 ]
 
 HOMEE_SWITCH_ATTRIBUTES = [
     AttributeType.ON_OFF,
     AttributeType.IMPULSE,
+    AttributeType.LIGHT_IMPULSE,
+    AttributeType.OPEN_PARTIAL_IMPULSE,
+    AttributeType.AUTOMATIC_MODE_IMPULSE,
+    AttributeType.BRIEFLY_OPEN_IMPULSE,
+    AttributeType.PERMANENTLY_OPEN_IMPULSE,
+    AttributeType.SLAT_ROTATION_IMPULSE,
+    AttributeType.VENTILATE_IMPULSE,
 ]
 
 
 def get_device_class(node: HomeeNode) -> int:
     """Determine the device class a homee node based on the node profile."""
     if node.profile in HOMEE_PLUG_PROFILES:
-        return DEVICE_CLASS_OUTLET
-    else:
-        return DEVICE_CLASS_SWITCH
+        return SwitchDeviceClass.OUTLET
+
+    return SwitchDeviceClass.SWITCH
 
 
 def is_switch_node(node: HomeeNode):
@@ -58,7 +65,7 @@ def is_switch_node(node: HomeeNode):
     return False
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
     """Add the homee platform for the switch component."""
 
     devices = []
@@ -74,7 +81,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(devices)
 
 
-async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return True
 
@@ -90,7 +97,7 @@ class HomeeSwitch(HomeeNodeEntity, SwitchEntity):
         entry: ConfigEntry,
         on_off_attribute: HomeeAttribute = None,
         switch_index=-1,
-    ):
+    ) -> None:
         """Initialize a homee switch entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
         self._on_off = on_off_attribute
@@ -102,10 +109,18 @@ class HomeeSwitch(HomeeNodeEntity, SwitchEntity):
     @property
     def name(self):
         """Return the display name of this entity. Entity is the main feature of a device when the index == 0"""
+        for key, val in AttributeType.__dict__.items():
+            if val == self._on_off.type:
+                attribute_name = key
+
+        # special impulses should always be named descriptive
+        if attribute_name.find("_IMPULSE") > -1:
+            return attribute_name[0 : attribute_name.find("_IMPULSE")]
+
         if self._switch_index <= 0:
             return None
 
-        elif self._switch_index > 0:
+        if self._switch_index > 0:
             return f"switch {self._switch_index + 1}"
 
     @property

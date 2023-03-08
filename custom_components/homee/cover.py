@@ -2,16 +2,14 @@
 
 import logging
 
-import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    SUPPORT_STOP,
-    SUPPORT_SET_POSITION,
+    CoverEntityFeature,
     CoverEntity,
+    CoverDeviceClass,
 )
-from typing import Any, cast
+from typing import cast
 from homeassistant.config_entries import ConfigEntry
 from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeNode
@@ -25,16 +23,30 @@ def get_cover_features(node: HomeeNodeEntity, default=0) -> int:
     """Determine the supported cover features of a homee node based on the available attributes."""
     features = default
 
-    if node.has_attribute(AttributeType.UP_DOWN) and node.has_attribute(AttributeType.MANUAL_OPERATION):
-        features |= SUPPORT_OPEN
-        features |= SUPPORT_CLOSE
-        features |= SUPPORT_STOP
-    if node.has_attribute(AttributeType.POSITION):
-        features |= SUPPORT_SET_POSITION
+    for attribute in node.attributes:
+        if attribute.type == AttributeType.UP_DOWN:
+            if attribute.editable:
+                features |= CoverEntityFeature.OPEN
+                features |= CoverEntityFeature.CLOSE
+                features |= CoverEntityFeature.STOP
+
+        if attribute.type == AttributeType.POSITION:
+            if attribute.editable:
+                features |= CoverEntityFeature.SET_POSITION
+
     return features
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+def get_device_class(node: HomeeNode) -> int:
+    """Determine the device class a homee node based on the node profile."""
+    if node.profile == NodeProfile.GARAGE_DOOR_OPERATOR:
+        return CoverDeviceClass.GARAGE
+
+    if node.profile == NodeProfile.SHUTTER_POSITION_SWITCH:
+        return CoverDeviceClass.SHUTTER
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
     """Add the homee platform for the cover integration."""
     # homee: Homee = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -47,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(devices)
 
 
-async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return True
 
@@ -58,19 +70,20 @@ def is_cover_node(node: HomeeNode):
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH,
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH_WITHOUT_SLAT_POSITION,
         NodeProfile.GARAGE_DOOR_OPERATOR,
-        NodeProfile.GARAGE_DOOR_IMPULSE_OPERATOR,
-        NodeProfile.SHUTTER_POSITION_SWITCH
+        NodeProfile.SHUTTER_POSITION_SWITCH,
     ]
 
 
 class HomeeCover(HomeeNodeEntity, CoverEntity):
     """Representation of a homee cover device."""
+
     _attr_has_entity_name = True
 
-    def __init__(self, node: HomeeNode, entry: ConfigEntry):
+    def __init__(self, node: HomeeNode, entry: ConfigEntry) -> None:
         """Initialize a homee cover entity."""
         HomeeNodeEntity.__init__(self, node, self, entry)
-        self._supported_features = get_cover_features(self)
+        self._supported_features = get_cover_features(node)
+        self._device_class = get_device_class(node)
 
         self._unique_id = f"{self._node.id}-cover"
 
@@ -106,25 +119,18 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self.async_set_value(
-            AttributeType.UP_DOWN, 0
-        )
+        await self.async_set_value(AttributeType.UP_DOWN, 0)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        await self.async_set_value(
-            AttributeType.UP_DOWN, 1
-        )
+        await self.async_set_value(AttributeType.UP_DOWN, 1)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        position = 100 - cast(int, kwargs[ATTR_POSITION])
-        await self.async_set_value(
-            AttributeType.POSITION, position
-        )
+        if CoverEntityFeature.SET_POSITION in self._supported_features:
+            position = 100 - cast(int, kwargs[ATTR_POSITION])
+            await self.async_set_value(AttributeType.POSITION, position)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        await self.async_set_value(
-            AttributeType.UP_DOWN, 2
-        )
+        await self.async_set_value(AttributeType.UP_DOWN, 2)

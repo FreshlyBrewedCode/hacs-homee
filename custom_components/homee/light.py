@@ -2,14 +2,12 @@
 
 import logging
 
-import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -28,11 +26,11 @@ from .const import HOMEE_LIGHT_MAX_MIRED, HOMEE_LIGHT_MIN_MIRED
 _LOGGER = logging.getLogger(__name__)
 
 LIGHT_ATTRIBUTES = [
-                    AttributeType.DIMMING_LEVEL,
-                    AttributeType.COLOR,
-                    AttributeType.HUE,
-                    AttributeType.COLOR_TEMPERATURE,
-                    AttributeType.COLOR_MODE
+    AttributeType.DIMMING_LEVEL,
+    AttributeType.COLOR,
+    AttributeType.HUE,
+    AttributeType.COLOR_TEMPERATURE,
+    AttributeType.COLOR_MODE,
 ]
 
 
@@ -41,32 +39,36 @@ def get_light_features(node: HomeeNodeEntity, default=0) -> int:
     features = default
 
     if node.has_attribute(AttributeType.DIMMING_LEVEL):
-        features |= SUPPORT_BRIGHTNESS
+        features |= ColorMode.BRIGHTNESS  #
     if node.has_attribute(AttributeType.COLOR) or node.has_attribute(AttributeType.HUE):
-        features |= SUPPORT_COLOR
+        features |= ColorMode.HS
     if node.has_attribute(AttributeType.COLOR_TEMPERATURE):
-        features |= SUPPORT_COLOR_TEMP
+        features |= ColorMode.COLOR_TEMP
 
     return features
 
 
 def get_light_attribute_sets(node: HomeeNodeEntity, index: int):
     """Returns a list with the attributes for each light entity to be created"""
-    on_off_attributes = [i for i in node.attributes if i.type == AttributeType.ON_OFF and i.editable]
+    on_off_attributes = [
+        i for i in node.attributes if i.type == AttributeType.ON_OFF and i.editable
+    ]
 
     try:
         target_light = on_off_attributes[index]
     except IndexError:
         return None
 
-    light = {AttributeType.ON_OFF:target_light}
+    light = {AttributeType.ON_OFF: target_light}
     # go through the next attributes by id until we hit none, on-off or non-light attribute
     # assumption: related homee light attribute ids appear to be sequential
     # e.g. on-off:id1, dimmer:id2, on-off:id3, dimmer:id4
     lookup_offset = 1
     next_id_valid = True
     while next_id_valid:
-        attribute_with_next_id = [i for i in node.attributes if i.id == (target_light.id + lookup_offset)]
+        attribute_with_next_id = [
+            i for i in node.attributes if i.id == (target_light.id + lookup_offset)
+        ]
         if not attribute_with_next_id:
             next_id_valid = False
             break
@@ -74,7 +76,7 @@ def get_light_attribute_sets(node: HomeeNodeEntity, index: int):
             next_id_valid = False
             break
         else:
-            light.update({attribute_with_next_id[0].type:attribute_with_next_id[0]})
+            light.update({attribute_with_next_id[0].type: attribute_with_next_id[0]})
             lookup_offset += 1
 
     return light
@@ -90,7 +92,7 @@ def decimal_to_rgb_list(color):
     return [(color & 0xFF0000) >> 16, (color & 0x00FF00) >> 8, (color & 0x0000FF)]
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
     """Add the homee platform for the light integration."""
 
     devices = []
@@ -111,7 +113,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(devices)
 
 
-async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     return True
 
@@ -140,9 +142,12 @@ def is_light_node(node: HomeeNode):
 
 class HomeeLight(HomeeNodeEntity, LightEntity):
     """Representation of a homee light."""
+
     _attr_has_entity_name = True
 
-    def __init__(self, node: HomeeNode, light_set, light_index, entry: ConfigEntry):
+    def __init__(
+        self, node: HomeeNode, light_set, light_index, entry: ConfigEntry
+    ) -> None:
         """Initialize a homee light."""
         HomeeNodeEntity.__init__(self, node, self, entry)
         self._supported_features = get_light_features(self)
@@ -159,8 +164,8 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
     def name(self):
         if self._light_index == 0:
             return None
-        else:
-            return f"light {self._light_index + 1}" 
+
+        return f"light {self._light_index + 1}"
 
     @property
     def supported_features(self):
