@@ -23,6 +23,12 @@ VALID_ATTRIBUTES = [
     AttributeType.UP_DOWN,
 ]
 
+MEASUREMENT_ATTRIBUTES = [
+    AttributeType.CURRENT_ENERGY_USE,
+    AttributeType.POSITION,
+    AttributeType.UP_DOWN,
+]
+
 
 def get_device_class(attribute: HomeeAttribute) -> int:
     """Determine the device class a homee node based on the node profile."""
@@ -37,7 +43,7 @@ def get_device_class(attribute: HomeeAttribute) -> int:
 
 def get_state_class(attribute: HomeeAttribute) -> int:
     """Determine the device class a homee node based on the node profile."""
-    if attribute.type == AttributeType.CURRENT_ENERGY_USE:
+    if attribute.type in MEASUREMENT_ATTRIBUTES:
         return SensorStateClass.MEASUREMENT
 
     if attribute.type == AttributeType.ACCUMULATED_ENERGY_USE:
