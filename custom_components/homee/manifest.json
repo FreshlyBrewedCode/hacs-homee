@@ -15,5 +15,5 @@
         "websockets==10.3"
     ],
     "ssdp": [],
-    "version": "2.3.1"
+    "version": "2.3.2"
 }
