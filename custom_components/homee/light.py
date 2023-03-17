@@ -2,12 +2,14 @@
 
 import logging
 
-from homeassistant.core import HomeAssistant
+import homeassistant
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    ColorMode,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -39,11 +41,11 @@ def get_light_features(node: HomeeNodeEntity, default=0) -> int:
     features = default
 
     if node.has_attribute(AttributeType.DIMMING_LEVEL):
-        features |= ColorMode.BRIGHTNESS  #
+        features |= SUPPORT_BRIGHTNESS
     if node.has_attribute(AttributeType.COLOR) or node.has_attribute(AttributeType.HUE):
-        features |= ColorMode.HS
+        features |= SUPPORT_COLOR
     if node.has_attribute(AttributeType.COLOR_TEMPERATURE):
-        features |= ColorMode.COLOR_TEMP
+        features |= SUPPORT_COLOR_TEMP
 
     return features
 
@@ -92,7 +94,7 @@ def decimal_to_rgb_list(color):
     return [(color & 0xFF0000) >> 16, (color & 0x00FF00) >> 8, (color & 0x0000FF)]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_devices):
     """Add the homee platform for the light integration."""
 
     devices = []
@@ -113,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices
         async_add_devices(devices)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: homeassistant, entry: ConfigEntry):
     """Unload a config entry."""
     return True
 
@@ -145,9 +147,7 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self, node: HomeeNode, light_set, light_index, entry: ConfigEntry
-    ) -> None:
+    def __init__(self, node: HomeeNode, light_set, light_index, entry: ConfigEntry):
         """Initialize a homee light."""
         HomeeNodeEntity.__init__(self, node, self, entry)
         self._supported_features = get_light_features(self)
@@ -164,8 +164,8 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
     def name(self):
         if self._light_index == 0:
             return None
-
-        return f"light {self._light_index + 1}"
+        else:
+            return f"light {self._light_index + 1}"
 
     @property
     def supported_features(self):
