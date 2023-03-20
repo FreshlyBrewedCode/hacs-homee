@@ -24,7 +24,10 @@ def get_cover_features(node: HomeeNodeEntity, default=0) -> int:
     features = default
 
     for attribute in node.attributes:
-        if attribute.type == AttributeType.UP_DOWN:
+        if (
+            attribute.type == AttributeType.UP_DOWN
+            or attribute.type == AttributeType.OPEN_CLOSE
+        ):
             if attribute.editable:
                 features |= CoverEntityFeature.OPEN
                 features |= CoverEntityFeature.CLOSE
@@ -87,6 +90,12 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
         self._unique_id = f"{self._node.id}-cover"
 
+        # Since we only support covers without tilt, there should only be one of these.
+        if self.has_attribute(AttributeType.UP_DOWN):
+            self._open_close_attribute = AttributeType.UP_DOWN
+        else:
+            self._open_close_attribute = AttributeType.OPEN_CLOSE
+
     @property
     def name(self):
         """Return the display name of this cover."""
@@ -99,18 +108,18 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     @property
     def current_cover_position(self):
-        """Return the cover's position"""
+        """Return the cover's position."""
         return 100 - self.attribute(AttributeType.POSITION)
 
     @property
     def is_opening(self):
-        """opening status of the cover."""
-        return True if self.attribute(AttributeType.UP_DOWN) == 3 else False
+        """Return teh opening status of the cover."""
+        return True if self.attribute(self._open_close_attribute) == 3 else False
 
     @property
     def is_closing(self):
         """Return the closing status of the cover."""
-        return True if self.attribute(AttributeType.UP_DOWN) == 4 else False
+        return True if self.attribute(self._open_close_attribute) == 4 else False
 
     @property
     def is_closed(self):
@@ -119,11 +128,11 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self.async_set_value(AttributeType.UP_DOWN, 0)
+        await self.async_set_value(self._open_close_attribute, 0)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        await self.async_set_value(AttributeType.UP_DOWN, 1)
+        await self.async_set_value(self._open_close_attribute, 1)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -133,4 +142,4 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        await self.async_set_value(AttributeType.UP_DOWN, 2)
+        await self.async_set_value(self._open_close_attribute, 2)
