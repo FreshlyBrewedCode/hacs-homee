@@ -124,7 +124,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         # Translate the homee position to HA's 0-100 scale
         homee_min = self.get_attribute(self._position_attribute).minimum
         homee_max = self.get_attribute(self._position_attribute).maximum
-        homee_position = self.attribute(AttributeType.POSITION)
+        homee_position = self.attribute(self._position_attribute)
         position = ((homee_position - homee_min) / (homee_max - homee_min)) * 100
 
         return 100 - position
