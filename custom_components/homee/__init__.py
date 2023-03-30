@@ -41,7 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up homee from a config entry."""
     # Create the Homee api object using host, user and password from the config
     homee = Homee(
-        entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+        entry.data[CONF_HOST],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        "pymee_" + hass.config.location_name,
     )
 
     # Migrate initial options
@@ -150,7 +153,7 @@ class HomeeNodeEntity:
 
     @property
     def device_info(self):
-        """Holds the available information about the device"""
+        """Holds the available information about the device."""
         if self.has_attribute(AttributeType.SOFTWARE_REVISION):
             sw_version = self.attribute(AttributeType.SOFTWARE_REVISION)
         else:
