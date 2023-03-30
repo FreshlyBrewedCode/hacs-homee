@@ -149,7 +149,12 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self.async_set_value(self._open_close_attribute, 0)
+        # For now, we only know of one device that uses this Attribute.
+        # For other devices the commands may be different.
+        if self._open_close_attribute == AttributeType.SLAT_ROTATION_IMPULSE:
+            await self.async_set_value(self._open_close_attribute, 2)
+        else:
+            await self.async_set_value(self._open_close_attribute, 0)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
@@ -169,4 +174,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        await self.async_set_value(self._open_close_attribute, 2)
+        # For now, we only know of one device that uses this Attribute.
+        # For other devices the commands may be different.
+        if self._open_close_attribute == AttributeType.SLAT_ROTATION_IMPULSE:
+            await self.async_set_value(self._open_close_attribute, 0_)
+        else:
+            await self.async_set_value(self._open_close_attribute, 2)
