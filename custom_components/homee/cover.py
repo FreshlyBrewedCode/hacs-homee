@@ -177,6 +177,6 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         # For now, we only know of one device that uses this Attribute.
         # For other devices the commands may be different.
         if self._open_close_attribute == AttributeType.SLAT_ROTATION_IMPULSE:
-            await self.async_set_value(self._open_close_attribute, 0_)
+            await self.async_set_value(self._open_close_attribute, 0)
         else:
             await self.async_set_value(self._open_close_attribute, 2)
