@@ -12,7 +12,7 @@
     "issue_tracker": "https://github.com/FreshlyBrewedCode/hacs-homee/issues",
     "requirements": [
         "pymee==1.6.0",
-        "websockets==10.3"
+        "websockets==11.0.1"
     ],
     "ssdp": [],
     "version": "2.3.2"
