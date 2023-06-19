@@ -52,6 +52,8 @@ def get_device_class(node: HomeeNode) -> int:
     if node.profile == NodeProfile.SHUTTER_POSITION_SWITCH:
         return CoverDeviceClass.SHUTTER
 
+    return None
+
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
     """Add the homee platform for the cover integration."""
@@ -149,16 +151,23 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        # For now, we only know of one device that uses this Attribute.
-        # For other devices the commands may be different.
         if self._open_close_attribute == AttributeType.SLAT_ROTATION_IMPULSE:
+            # For now, we only know of one device that uses this Attribute.
+            # For other devices the commands may be different.
             await self.async_set_value(self._open_close_attribute, 2)
         else:
-            await self.async_set_value(self._open_close_attribute, 0)
+            if self.get_attribute(self._position_attribute).options.reverse_control_ui:
+                await self.async_set_value(self._open_close_attribute, 1)
+            else:
+                await self.async_set_value(self._open_close_attribute, 0)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        await self.async_set_value(self._open_close_attribute, 1)
+        # For now, all devices use 1 as close here.
+        if self.get_attribute(self._position_attribute).options.reverse_control_ui:
+            await self.async_set_value(self._open_close_attribute, 0)
+        else:
+            await self.async_set_value(self._open_close_attribute, 1)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
