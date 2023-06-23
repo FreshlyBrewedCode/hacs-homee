@@ -96,7 +96,8 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
         self._unique_id = f"{self._node.id}-cover"
 
-        # Since we only support covers without tilt, there should only be one of these.
+        # TODO needs to be changed, when covers with tilt should be supported
+        # For now there should only be one of these.
         if self.has_attribute(AttributeType.OPEN_CLOSE):
             self._open_close_attribute = AttributeType.OPEN_CLOSE
         elif self.has_attribute(AttributeType.SLAT_ROTATION_IMPULSE):
@@ -123,7 +124,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return the cover's position."""
-        # Translate the homee position to HA's 0-100 scale
+        # Translate the homee position values to HA's 0-100 scale
         homee_min = self.get_attribute(self._position_attribute).minimum
         homee_max = self.get_attribute(self._position_attribute).maximum
         homee_position = self.attribute(self._position_attribute)
@@ -133,7 +134,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     @property
     def is_opening(self):
-        """Return teh opening status of the cover."""
+        """Return the opening status of the cover."""
         return self.attribute(self._open_close_attribute) == 3
 
     @property
@@ -183,9 +184,6 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        # For now, we only know of one device that uses this Attribute.
-        # For other devices the commands may be different.
-        if self._open_close_attribute == AttributeType.SLAT_ROTATION_IMPULSE:
-            await self.async_set_value(self._open_close_attribute, 0)
-        else:
+        if self._open_close_attribute != AttributeType.SLAT_ROTATION_IMPULSE:
+            # The SLAT_ROTATION_IMPULSE does not support stop.
             await self.async_set_value(self._open_close_attribute, 2)
