@@ -145,6 +145,12 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return the state of the cover."""
+        if self.get_attribute(self._position_attribute).options.reverse_control_ui:
+            return (
+                self.attribute(self._position_attribute)
+                == self.get_attribute(self._position_attribute).minimum
+            )
+
         return (
             self.attribute(self._position_attribute)
             == self.get_attribute(self._position_attribute).maximum
@@ -157,18 +163,12 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             # For other devices the commands may be different.
             await self.async_set_value(self._open_close_attribute, 2)
         else:
-            if self.get_attribute(self._position_attribute).options.reverse_control_ui:
-                await self.async_set_value(self._open_close_attribute, 1)
-            else:
-                await self.async_set_value(self._open_close_attribute, 0)
+            await self.async_set_value(self._open_close_attribute, 0)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         # For now, all devices use 1 as close here.
-        if self.get_attribute(self._position_attribute).options.reverse_control_ui:
-            await self.async_set_value(self._open_close_attribute, 0)
-        else:
-            await self.async_set_value(self._open_close_attribute, 1)
+        await self.async_set_value(self._open_close_attribute, 1)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
