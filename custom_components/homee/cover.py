@@ -145,7 +145,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return the state of the cover."""
-        if self.get_attribute(self._position_attribute).options.reverse_control_ui:
+        # TODO: Not sure if the open_close reverse option really has effect
+        #       here. The tested device showed 100% as open however.
+        if self.get_attribute(self._open_close_attribute).options.reverse_control_ui:
             return (
                 self.attribute(self._position_attribute)
                 == self.get_attribute(self._position_attribute).minimum
@@ -158,17 +160,25 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        if self._open_close_attribute == AttributeType.SLAT_ROTATION_IMPULSE:
+        open_close = self._open_close_attribute
+        if open_close == AttributeType.SLAT_ROTATION_IMPULSE:
             # For now, we only know of one device that uses this Attribute.
             # For other devices the commands may be different.
-            await self.async_set_value(self._open_close_attribute, 2)
+            await self.async_set_value(open_close, 2)
         else:
-            await self.async_set_value(self._open_close_attribute, 0)
+            if self.get_attribute(open_close).options.reverse_control_ui:
+                await self.async_set_value(open_close, 1)
+            else:
+                await self.async_set_value(open_close, 0)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         # For now, all devices use 1 as close here.
-        await self.async_set_value(self._open_close_attribute, 1)
+        open_close = self._open_close_attribute
+        if self.get_attribute(open_close).options.reverse_control_ui:
+            await self.async_set_value(open_close, 0)
+        else:
+            await self.async_set_value(open_close, 1)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
