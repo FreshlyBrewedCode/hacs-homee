@@ -102,7 +102,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             self._open_close_attribute = AttributeType.OPEN_CLOSE
         elif self.has_attribute(AttributeType.SLAT_ROTATION_IMPULSE):
             self._open_close_attribute = AttributeType.SLAT_ROTATION_IMPULSE
-        else:  # UP_DOWN ist default
+        else:  # UP_DOWN is default
             self._open_close_attribute = AttributeType.UP_DOWN
 
         # Set position can also be controlled with different attributes.
