@@ -1,6 +1,7 @@
 """The homee cover platform."""
 
 import logging
+from typing import cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.components.cover import (
@@ -9,7 +10,6 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverDeviceClass,
 )
-from typing import cast
 from homeassistant.config_entries import ConfigEntry
 from pymee.const import AttributeType, NodeProfile
 from pymee.model import HomeeNode
@@ -18,19 +18,26 @@ from . import HomeeNodeEntity, helpers
 
 _LOGGER = logging.getLogger(__name__)
 
+OPEN_CLOSE_ATTRIBUTES = [
+    AttributeType.UP_DOWN,
+    AttributeType.OPEN_CLOSE,
+    AttributeType.SLAT_ROTATION_IMPULSE,
+]
+POSITION_ATTRIBUTES = [AttributeType.POSITION, AttributeType.SHUTTER_SLAT_POSITION]
+
 
 def get_cover_features(node: HomeeNodeEntity, default=0) -> int:
     """Determine the supported cover features of a homee node based on the available attributes."""
     features = default
 
     for attribute in node.attributes:
-        if attribute.type == AttributeType.UP_DOWN:
+        if attribute.type in OPEN_CLOSE_ATTRIBUTES:
             if attribute.editable:
                 features |= CoverEntityFeature.OPEN
                 features |= CoverEntityFeature.CLOSE
                 features |= CoverEntityFeature.STOP
 
-        if attribute.type == AttributeType.POSITION:
+        if attribute.type in POSITION_ATTRIBUTES:
             if attribute.editable:
                 features |= CoverEntityFeature.SET_POSITION
 
@@ -44,6 +51,8 @@ def get_device_class(node: HomeeNode) -> int:
 
     if node.profile == NodeProfile.SHUTTER_POSITION_SWITCH:
         return CoverDeviceClass.SHUTTER
+
+    return None
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_devices):
@@ -87,6 +96,21 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
         self._unique_id = f"{self._node.id}-cover"
 
+        # TODO needs to be changed, when covers with tilt should be supported
+        # For now there should only be one of these.
+        if self.has_attribute(AttributeType.OPEN_CLOSE):
+            self._open_close_attribute = AttributeType.OPEN_CLOSE
+        elif self.has_attribute(AttributeType.SLAT_ROTATION_IMPULSE):
+            self._open_close_attribute = AttributeType.SLAT_ROTATION_IMPULSE
+        else:  # UP_DOWN is default
+            self._open_close_attribute = AttributeType.UP_DOWN
+
+        # Set position can also be controlled with different attributes.
+        if self.has_attribute(AttributeType.SHUTTER_SLAT_POSITION):
+            self._position_attribute = AttributeType.SHUTTER_SLAT_POSITION
+        else:  # POSITION is default.
+            self._position_attribute = AttributeType.POSITION
+
     @property
     def name(self):
         """Return the display name of this cover."""
@@ -99,38 +123,77 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     @property
     def current_cover_position(self):
-        """Return the cover's position"""
-        return 100 - self.attribute(AttributeType.POSITION)
+        """Return the cover's position."""
+        # Translate the homee position values to HA's 0-100 scale
+        homee_min = self.get_attribute(self._position_attribute).minimum
+        homee_max = self.get_attribute(self._position_attribute).maximum
+        homee_position = self.attribute(self._position_attribute)
+        position = ((homee_position - homee_min) / (homee_max - homee_min)) * 100
+
+        return 100 - position
 
     @property
     def is_opening(self):
-        """opening status of the cover."""
-        return True if self.attribute(AttributeType.UP_DOWN) == 3 else False
+        """Return the opening status of the cover."""
+        return self.attribute(self._open_close_attribute) == 3
 
     @property
     def is_closing(self):
         """Return the closing status of the cover."""
-        return True if self.attribute(AttributeType.UP_DOWN) == 4 else False
+        return self.attribute(self._open_close_attribute) == 4
 
     @property
     def is_closed(self):
         """Return the state of the cover."""
-        return True if self.attribute(AttributeType.POSITION) == 100 else False
+        # TODO: Not sure if the open_close reverse option really has effect
+        #       here. The tested device showed 100% as open however.
+        if self.get_attribute(self._open_close_attribute).options.reverse_control_ui:
+            return (
+                self.attribute(self._position_attribute)
+                == self.get_attribute(self._position_attribute).minimum
+            )
+
+        return (
+            self.attribute(self._position_attribute)
+            == self.get_attribute(self._position_attribute).maximum
+        )
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self.async_set_value(AttributeType.UP_DOWN, 0)
+        open_close = self._open_close_attribute
+        if open_close == AttributeType.SLAT_ROTATION_IMPULSE:
+            # For now, we only know of one device that uses this Attribute.
+            # For other devices the commands may be different.
+            await self.async_set_value(open_close, 2)
+        else:
+            if self.get_attribute(open_close).options.reverse_control_ui:
+                await self.async_set_value(open_close, 1)
+            else:
+                await self.async_set_value(open_close, 0)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        await self.async_set_value(AttributeType.UP_DOWN, 1)
+        # For now, all devices use 1 as close here.
+        open_close = self._open_close_attribute
+        if self.get_attribute(open_close).options.reverse_control_ui:
+            await self.async_set_value(open_close, 0)
+        else:
+            await self.async_set_value(open_close, 1)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if CoverEntityFeature.SET_POSITION in self._supported_features:
             position = 100 - cast(int, kwargs[ATTR_POSITION])
-            await self.async_set_value(AttributeType.POSITION, position)
+
+            # Convert position to range of our entity.
+            homee_min = self.get_attribute(self._position_attribute).minimum
+            homee_max = self.get_attribute(self._position_attribute).maximum
+            homee_position = (position / 100) * (homee_max - homee_min) + homee_min
+
+            await self.async_set_value(self._position_attribute, homee_position)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        await self.async_set_value(AttributeType.UP_DOWN, 2)
+        if self._open_close_attribute != AttributeType.SLAT_ROTATION_IMPULSE:
+            # The SLAT_ROTATION_IMPULSE does not support stop.
+            await self.async_set_value(self._open_close_attribute, 2)
