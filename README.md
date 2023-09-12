@@ -1,3 +1,7 @@
+  
+> ## :warning: Note: this repo is no longer maintained. Please check out [Taraman17's fork](https://github.com/Taraman17/hacs-homee) instead for an updated version.
+
+
 # Home Assistant homee integration
 
 [![GitHub Release][releases-shield]][releases]
